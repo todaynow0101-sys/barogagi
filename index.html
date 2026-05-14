@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로가기 — 필요할 때 바로, 가능할 때 바로</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+:root {
+  --yellow: #FFE000;
+  --yellow-dark: #E6C800;
+  --black: #111111;
+  --white: #FFFFFF;
+  --gray: #F5F5F5;
+  --text2: #666;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'Noto Sans KR',sans-serif; background:var(--white); color:var(--black); overflow-x:hidden; }
+
+/* ── HERO ── */
+.hero {
+  min-height:100vh;
+  background:var(--black);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center;
+  padding:60px 24px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before {
+  content:'';
+  position:absolute;
+  width:600px; height:600px;
+  background:radial-gradient(circle, rgba(255,224,0,0.15) 0%, transparent 70%);
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.hero-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(255,224,0,0.12); border:1px solid rgba(255,224,0,0.3);
+  border-radius:20px; padding:6px 16px;
+  font-size:12px; font-weight:500; color:var(--yellow);
+  margin-bottom:36px;
+  animation:fadeUp .6s ease both;
+}
+.hero-badge-dot { width:6px; height:6px; background:var(--yellow); border-radius:50%; animation:blink 1.4s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.hero-title {
+  font-size:clamp(42px, 8vw, 80px);
+  font-weight:900;
+  line-height:1.15;
+  letter-spacing:-2px;
+  color:var(--white);
+  margin-bottom:20px;
+  animation:fadeUp .6s .1s ease both;
+}
+.hero-title em {
+  color:var(--yellow);
+  font-style:normal;
+}
+.hero-sub {
+  font-size:clamp(15px, 2vw, 18px);
+  color:#888;
+  font-weight:300;
+  line-height:1.7;
+  margin-bottom:48px;
+  animation:fadeUp .6s .2s ease both;
+}
+.hero-btns {
+  display:flex; gap:12px; flex-wrap:wrap; justify-content:center;
+  animation:fadeUp .6s .3s ease both;
+}
+.btn-primary {
+  padding:16px 32px; background:var(--yellow); color:var(--black);
+  border:none; border-radius:12px; font-family:inherit;
+  font-size:15px; font-weight:700; cursor:pointer; text-decoration:none;
+  transition:all .2s;
+}
+.btn-primary:hover { background:var(--yellow-dark); transform:translateY(-2px); }
+.btn-ghost {
+  padding:16px 32px; background:transparent; color:var(--white);
+  border:1.5px solid #333; border-radius:12px; font-family:inherit;
+  font-size:15px; font-weight:500; cursor:pointer; text-decoration:none;
+  transition:all .2s;
+}
+.btn-ghost:hover { border-color:#555; }
+
+.scroll-hint {
+  position:absolute; bottom:32px;
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  color:#444; font-size:12px;
+  animation:fadeUp .6s .5s ease both;
+}
+.scroll-line { width:1px; height:40px; background:linear-gradient(to bottom, #444, transparent); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── PAIN SECTION ── */
+.pain {
+  padding:100px 24px;
+  background:var(--white);
+}
+.pain-inner { max-width:900px; margin:0 auto; }
+.section-label {
+  font-size:12px; font-weight:700; letter-spacing:3px;
+  text-transform:uppercase; color:var(--yellow-dark);
+  margin-bottom:16px;
+}
+.section-title {
+  font-size:clamp(28px, 4vw, 44px);
+  font-weight:900; letter-spacing:-1px;
+  line-height:1.2; margin-bottom:60px;
+}
+
+.pain-grid {
+  display:grid; grid-template-columns:1fr 60px 1fr; gap:0;
+  align-items:start;
+}
+.pain-col { display:flex; flex-direction:column; gap:16px; }
+.pain-divider {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:flex-start; padding-top:4px; gap:8px;
+}
+.pain-vs {
+  width:40px; height:40px; background:var(--black); color:var(--white);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; flex-shrink:0;
+}
+.pain-line { flex:1; width:1px; background:var(--gray); min-height:200px; }
+
+.pain-card {
+  background:var(--gray); border-radius:14px; padding:20px;
+  position:relative; overflow:hidden;
+}
+.pain-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width:3px; border-radius:2px;
+}
+.pain-card.employer::before { background:#FF4B4B; }
+.pain-card.worker::before { background:#3478F6; }
+.pain-who {
+  font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:1px; margin-bottom:8px;
+}
+.pain-card.employer .pain-who { color:#FF4B4B; }
+.pain-card.worker .pain-who { color:#3478F6; }
+.pain-text { font-size:15px; font-weight:500; line-height:1.5; color:var(--black); }
+
+/* ── SOLUTION ── */
+.solution {
+  padding:100px 24px;
+  background:var(--black);
+  text-align:center;
+}
+.solution-inner { max-width:700px; margin:0 auto; }
+.solution .section-label { color:var(--yellow); }
+.solution .section-title { color:var(--white); margin-bottom:24px; }
+.solution-desc {
+  font-size:18px; color:#888; font-weight:300; line-height:1.8;
+  margin-bottom:60px;
+}
+.solution-pills {
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+  margin-bottom:60px;
+}
+.pill {
+  padding:10px 20px; border-radius:20px;
+  background:rgba(255,224,0,0.1); border:1px solid rgba(255,224,0,0.25);
+  color:var(--yellow); font-size:14px; font-weight:500;
+}
+
+/* ── HOW ── */
+.how {
+  padding:100px 24px;
+  background:var(--white);
+}
+.how-inner { max-width:900px; margin:0 auto; }
+.how-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:24px; margin-top:60px; }
+.how-card {
+  padding:32px; border-radius:20px; border:1.5px solid #EBEBEB;
+  transition:all .2s;
+}
+.how-card:hover { border-color:var(--yellow); transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.06); }
+.how-num {
+  font-size:36px; font-weight:900; color:var(--yellow);
+  margin-bottom:16px; line-height:1;
+}
+.how-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+.how-desc { font-size:14px; color:var(--text2); line-height:1.7; }
+
+/* ── CTA / QR ── */
+.cta {
+  padding:100px 24px;
+  background:var(--yellow);
+  text-align:center;
+}
+.cta-inner { max-width:600px; margin:0 auto; }
+.cta-title {
+  font-size:clamp(32px, 5vw, 52px);
+  font-weight:900; letter-spacing:-1.5px;
+  line-height:1.15; margin-bottom:16px;
+  color:var(--black);
+}
+.cta-sub { font-size:16px; color:rgba(0,0,0,.5); margin-bottom:48px; }
+.qr-wrap {
+  background:var(--white); border-radius:20px;
+  padding:32px; display:inline-block;
+  box-shadow:0 8px 32px rgba(0,0,0,0.12);
+  margin-bottom:20px;
+}
+.qr-label { font-size:13px; color:rgba(0,0,0,.5); margin-top:12px; }
+.install-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:32px; }
+.install-btn {
+  padding:14px 28px; background:var(--black); color:var(--white);
+  border-radius:12px; font-family:inherit; font-size:14px; font-weight:600;
+  text-decoration:none; transition:all .2s;
+}
+.install-btn:hover { background:#333; }
+
+/* ── FOOTER ── */
+footer {
+  padding:40px 24px;
+  background:var(--black);
+  text-align:center;
+}
+.footer-logo { font-size:20px; font-weight:900; color:var(--white); margin-bottom:8px; }
+.footer-logo span { color:var(--yellow); }
+.footer-sub { font-size:13px; color:#555; }
+
+/* MOBILE */
+@media(max-width:600px) {
+  .pain-grid { grid-template-columns:1fr; }
+  .pain-divider { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    지금 런칭 준비 중
+  </div>
+  <h1 class="hero-title">
+    필요할 때 <em>바로</em><br>
+    가능할 때 <em>바로</em>
+  </h1>
+  <p class="hero-sub">
+    사업주는 필요한 순간에만 인력을 쓰고<br>
+    워커는 가능한 시간에만 일하는 플랫폼
+  </p>
+  <div class="hero-btns">
+    <a href="#cta" class="btn-primary">앱 설치하기</a>
+    <a href="#pain" class="btn-ghost">더 알아보기</a>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    scroll
+  </div>
+</section>
+
+<!-- PAIN -->
+<section class="pain" id="pain">
+  <div class="pain-inner">
+    <div class="section-label">문제</div>
+    <h2 class="section-title">기존 알바 시장의<br>불편함, 아직도 겪고 계신가요?</h2>
+
+    <div class="pain-grid">
+      <div class="pain-col">
+        <div class="pain-card employer">
+          <div class="pain-who">사업주</div>
+          <div class="pain-text">갑자기 직원이 아파서<br>오늘 당장 사람이 필요한데</div>
+        </div>
+        <div class="pain-card employer">
+          <div class="pain-who">사업주</div>
+          <div class="pain-text">주휴수당 부담 때문에<br>정규직은 못 쓰겠고</div>
+        </div>
+        <div class="pain-card employer">
+          <div class="pain-who">사업주</div>
+          <div class="pain-text">카톡 오픈채팅에 올려도<br>연락이 없어요</div>
+        </div>
+      </div>
+
+      <div class="pain-divider">
+        <div class="pain-vs">VS</div>
+        <div class="pain-line"></div>
+      </div>
+
+      <div class="pain-col">
+        <div class="pain-card worker">
+          <div class="pain-who">워커</div>
+          <div class="pain-text">오늘 갑자기 시간이 생겼는데<br>일할 곳이 없어요</div>
+        </div>
+        <div class="pain-card worker">
+          <div class="pain-who">워커</div>
+          <div class="pain-text">고정 스케줄이 부담돼서<br>알바를 못 구하겠어요</div>
+        </div>
+        <div class="pain-card worker">
+          <div class="pain-who">워커</div>
+          <div class="pain-text">알바 구하는 데<br>며칠씩 걸려요</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="solution">
+  <div class="solution-inner">
+    <div class="section-label">해결</div>
+    <h2 class="section-title">바로가기가<br>지금 이 순간을 연결합니다</h2>
+    <p class="solution-desc">
+      공고 올리면 주변 워커에게 즉시 전달<br>
+      워커는 ON 하나로 구직 시작
+    </p>
+    <div class="solution-pills">
+      <div class="pill">실시간 매칭</div>
+      <div class="pill">주변 반경 내 연결</div>
+      <div class="pill">주휴수당 부담 없음</div>
+      <div class="pill">ON/OFF 구직 토글</div>
+      <div class="pill">즉시 연락처 공개</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section class="how">
+  <div class="how-inner">
+    <div class="section-label">이용 방법</div>
+    <h2 class="section-title">3단계로 끝납니다</h2>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-num">01</div>
+        <div class="how-title">공고 올리기</div>
+        <div class="how-desc">사업주가 업무 내용, 시간, 시급을 입력하고 공고를 올립니다. 1분이면 충분해요.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">02</div>
+        <div class="how-title">즉시 매칭</div>
+        <div class="how-desc">주변 구직 중인 워커에게 공고가 바로 전달됩니다. 워커가 지원하면 알림이 와요.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">03</div>
+        <div class="how-title">수락 & 연결</div>
+        <div class="how-desc">사업주가 수락하면 연락처가 공개됩니다. 바로 연락하고 일을 시작하세요.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / QR -->
+<section class="cta" id="cta">
+  <div class="cta-inner">
+    <h2 class="cta-title">지금 <span style="color:var(--black);background:var(--white);padding:0 4px;border-radius:4px">바로</span><br>시작해보세요</h2>
+    <p class="cta-sub">QR 코드를 스캔하거나 아래 버튼을 눌러 설치하세요</p>
+    <div class="qr-wrap">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyCAIAAABnRsZeAAAHuklEQVR4nO3dUY5jNRRFUQoxgp7/GHsKYQYW4H1lO6z1i5K8SlVv+ePI/Hw+nz8AOn+efgDg28gKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUg9tfOi3/9+lU9xyV+//69+K/rn3f92rWddz71VHfyXVV2vg2nFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgtrWyXdtZ6c05tYbc+dxTz3xqN3zK3DO/+PPucFoBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWKDK9u1uYXf3KLx1D2pc168Q9fa9Z879fM6rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsWMr2xfN3Uc7t4Z88ZnnFro77lzo3slpBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIWdn+Czt3u669uGedc2opO/e5/zdOK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitA7NjK9s5955w7b6u983N3trAv/l29+MxrTitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGxwZft9N4Pu7DvvfO3anc/84gb3+/4trDmtADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrACxrZXt993BOefF72puv7vzuXOv3fHi73eO0woQkxUgJitATFaAmKwAMVkBYrICxGQFiMkKENta2Z66Y/XF9eeLt5ne+cx33nR75zvP/Stbc1oBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJbK9u1uY3m3KJxzqn159y3sfMT3bnfnfN9G9w1pxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVILa1sp1bjt55f+epde//7fbWF53aHJ/a0a45rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAscG7bOfMrRJ3XruzOp1bu8699tTWee3F7e+dS9kdTitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGxrZXvn/63+1Przzpt9117cpO54cZ/9IqcVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSB27C7buW3oqe3vi597at17yqlnvvObnPtcpxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVIPbz+Xz+84vnbgY9tVi9czl6512nd97P+n072jsXumtOK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitAbPAu253936k7Vk8tGu9cUs4tZe+82ffONfPanX85TitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGxwZTu3/7tzR3vnQnfH9z3znRvcO59qh9MKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChD7+Xw+Q299av936v7OHXcudF+8UfjO1encM5965zWnFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgNriyvdOLt6iu3blJvXMZPPe5c+7c0a45rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsa2V7Z0bzTv3rDvuvHF2x53b0FPu/B3tcFoBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJ/7bx4brF6aik759TnnjK3oz31znNr1+/7eZ1WgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoDY1sr2xcXqqd3hqWXwnbvStRdvI77zmzzFaQWIyQoQkxUgJitATFaAmKwAMVkBYrICxGQFiB27y3ZtZ7M4d0vunUvKnaeau0V1be5z55557qnm1tundvBOK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitAbGtlu/biDazfdzvvnDu/5xe/jVPmntlpBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIba1s5+6FXZvbd566JfeUO3+Dp26NvfMO3Tv/ctacVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2M/n8zn9DM84taM9dcPujrnbiE/dZHzn7/fODa7TChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQG7zL9kWnlpQ7n3vnznLH3N/VqXc+9fs9tRt2WgFisgLEZAWIyQoQkxUgJitATFaAmKwAMVkBYlsr27U715/ft7Ocuxd27c7l6Ckv3nQ79xfrtALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxAZXtmtzW8m5veOdN93euXY9tbF+8R7ctbmd9BynFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgdmxl+6I7F41rp7awp27Y3eHbqDitADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxK9sr7Ows5266XTv1zjur07nv+dTdzHPfxg6nFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgdmxlO7fwmzO30Tzlzltj71y7zjm1op77i3VaAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFigyvbF/eOa6fWn9+37l07tcHd+a7m1q47rz11z7HTChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQ+/l8PqefAfgqTitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrACxvwEt/ealNsvU2wAAAABJRU5ErkJggg==" style="width:180px;height:180px;display:block">
+      <div class="qr-label">카메라로 스캔하세요</div>
+    </div>
+    <div class="install-btns">
+      <a href="https://dashing-marigold-eacfdb.netlify.app/app.html" class="install-btn" target="_blank">📱 앱 설치하기</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span style="color:var(--yellow)">바로</span><span style="color:var(--white)">가기</span></div>
+  <div class="footer-sub">지금 필요한 사람, 지금 연결 · © 2026 바로가기</div>
+</footer>
+
+<script>
+
+
+// 스크롤 애니메이션
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.pain-card, .how-card').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity .5s ease, transform .5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
