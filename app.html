@@ -142,12 +142,15 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
 .job-meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
 .meta-chip { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--text2); background:var(--bg); border-radius:8px; padding:4px 10px; font-weight:500; }
 .badge-new { position:absolute; top:14px; right:14px; background:var(--yellow); color:var(--text); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; }
+.badge-fire { position:absolute; top:14px; right:14px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; animation:fireAnim 1s ease-in-out infinite; }
+@keyframes fireAnim { 0%,100%{transform:scale(1)}50%{transform:scale(1.08)} }
 .badge-status { display:inline-flex; align-items:center; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700; }
 .badge-open { background:#E8FBF1; color:var(--green); }
 .badge-closed { background:#FEE8E8; color:var(--red); }
 .badge-pending { background:#FFF9C4; color:#B8860B; }
 .badge-accepted { background:#E8FBF1; color:var(--green); }
 .badge-rejected { background:#F5F5F5; color:var(--text3); }
+.badge-cancelled { background:#F5F5F5; color:var(--text3); }
 
 /* STATS */
 .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
@@ -446,6 +449,7 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
       <button class="fchip" onclick="filterApplies('pending',this)">검토중</button>
       <button class="fchip" onclick="filterApplies('accepted',this)">수락됨</button>
       <button class="fchip" onclick="filterApplies('rejected',this)">패스됨</button>
+      <button class="fchip" onclick="filterApplies('cancelled',this)">취소됨</button>
     </div>
     <div id="my-applies-list"></div>
   </div>
@@ -505,6 +509,12 @@ let allApplies = [];
 
 window.addEventListener('load', async () => {
   document.getElementById('j-date').value = new Date().toISOString().split('T')[0];
+  // 자동로그인: 저장된 세션 확인
+  const { data: { session: savedSession } } = await sb.auth.getSession();
+  if (savedSession && !currentUser) {
+    currentUser = savedSession.user;
+    await loadProfile();
+  }
   sb.auth.onAuthStateChange(async (event, session) => {
     if (session) {
       currentUser = session.user;
@@ -780,9 +790,15 @@ async function loadJobs(cat) {
   if(!jobs||jobs.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">주변에 공고가 없어요<br>잠시 후 다시 확인해보세요</div></div>';return;}
   const icons={'외식':'🍜','카페':'☕','편의점':'🏪','물류':'📦','청소':'🧹'};
   const bgs={'외식':'#FFF9C4','카페':'#E8F5E9','편의점':'#FFF3E0','물류':'#E3F2FD','청소':'#FCE4EC'};
-  el.innerHTML=jobs.map((j,i)=>`
+  const today2 = new Date().toISOString().split('T')[0];
+  const urgent = jobs.filter(j=>j.date===today2);
+  const normal = jobs.filter(j=>j.date!==today2);
+  const sorted = [...urgent,...normal];
+  el.innerHTML=sorted.map((j,i)=>{
+  const isUrgent = j.date===today2;
+  return `
     <div class="job-card" style="animation-delay:${i*.05}s">
-      ${i===0?'<div class="badge-new">NEW</div>':''}
+      ${isUrgent?'<div class="badge-fire">🔥 오늘마감</div>':i===0?'<div class="badge-new">NEW</div>':''}
       <div class="job-top">
         <div class="biz-icon" style="background:${bgs[j.category]||'#FFF9C4'}">${icons[j.category]||'💼'}</div>
         <div class="job-info">
@@ -803,7 +819,7 @@ async function loadJobs(cat) {
       <button class="btn btn-yellow btn-full" id="ab-${j.id}" onclick="applyJob('${j.id}',this)" style="font-size:15px;padding:14px">지원하기</button>
     </div>
   `).join('');
-  checkApplied(jobs.map(j=>j.id));
+  checkApplied(sorted.map(j=>j.id));
 }
 
 async function checkApplied(jobIds) {
@@ -850,7 +866,7 @@ function renderApplies(list) {
   el.innerHTML=list.map(app=>{
     const j=app.jobs;
     if(!j) return '';
-    const sLabel=app.status==='pending'?'검토중':app.status==='accepted'?'수락됨':'패스됨';
+    const sLabel=app.status==='pending'?'검토중':app.status==='accepted'?'수락됨':app.status==='cancelled'?'취소됨':'패스됨';
     return `
       <div class="job-card">
         <div class="job-top">
@@ -866,6 +882,7 @@ function renderApplies(list) {
         </div>
         <div class="job-meta">
           <div class="meta-chip">📅 ${j.date}</div>
+          <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
           <span class="badge-status badge-${app.status}">${sLabel}</span>
         </div>
         ${app.status==='accepted'?`
@@ -874,9 +891,20 @@ function renderApplies(list) {
             <div class="contact-num">${j.employer_phone||'번호 미등록'}</div>
           </div>
         `:''}
+        ${app.status==='pending'?`
+          <button onclick="cancelApply('${app.id}')" style="width:100%;margin-top:8px;padding:10px;background:transparent;color:var(--red);border:1.5px solid #FFD0D0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">지원 취소</button>
+        `:''}
       </div>
     `;
-  }).join('');
+  }).join('');}
+}
+
+async function cancelApply(appId) {
+  if(!confirm('지원을 취소할까요?')) return;
+  await sb.from('applications').update({status:'cancelled', cancelled_at:new Date().toISOString()}).eq('id',appId);
+  showToast('지원을 취소했어요');
+  loadMyApplies('전체');
+  loadWorkerStats();
 }
 
 function filterApplies(filter, el) {
