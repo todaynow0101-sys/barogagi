@@ -818,7 +818,8 @@ async function loadJobs(cat) {
       </div>
       <button class="btn btn-yellow btn-full" id="ab-${j.id}" onclick="applyJob('${j.id}',this)" style="font-size:15px;padding:14px">지원하기</button>
     </div>
-  `).join('');
+  `;
+  }).join('');
   checkApplied(sorted.map(j=>j.id));
 }
 
@@ -896,9 +897,8 @@ function renderApplies(list) {
         `:''}
       </div>
     `;
-  }).join('');}
+    }).join('');
 }
-
 async function cancelApply(appId) {
   if(!confirm('지원을 취소할까요?')) return;
   await sb.from('applications').update({status:'cancelled', cancelled_at:new Date().toISOString()}).eq('id',appId);
