@@ -1,8 +1,8 @@
 {
-  "name": "바로가기",
-  "short_name": "바로가기",
-  "description": "지금 필요한 사람, 지금 연결",
-  "start_url": "/",
+  "name": "\ubc14\ub85c\uac00\uae30",
+  "short_name": "\ubc14\ub85c\uac00\uae30",
+  "description": "\uc9c0\uae08 \ud544\uc694\ud55c \uc0ac\ub78c, \uc9c0\uae08 \uc5f0\uacb0",
+  "start_url": "/barogagi/app.html",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#FFE000",
@@ -20,5 +20,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "scope": "/barogagi/"
 }
