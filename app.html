@@ -14,7 +14,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  
 @font-face {
   font-family: Pretendard;
   src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
@@ -118,6 +117,7 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
 .btn-yellow:disabled { opacity:.5; cursor:not-allowed; }
 .btn-white { background:var(--white); color:var(--text); border:1.5px solid var(--border); }
 .btn-green { background:var(--green); color:white; }
+.btn-red { background:var(--red); color:white; }
 .btn-full { width:100%; }
 .btn-sm { padding:8px 14px; font-size:13px; border-radius:10px; }
 
@@ -455,6 +455,41 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
     <div id="my-applies-list"></div>
   </div>
 
+  <div id="wk-pref" class="content" style="display:none">
+    <div class="sec-title">지원 조건 설정</div>
+    <div class="sec-sub">내가 원하는 조건의 공고만 보여드려요</div>
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">선호 업종</label>
+        <div class="tag-wrap" id="pref-cats">
+          <div class="tag" data-v="외식" onclick="togglePrefTag(this)">🍜 외식</div>
+          <div class="tag" data-v="카페" onclick="togglePrefTag(this)">☕ 카페</div>
+          <div class="tag" data-v="편의점" onclick="togglePrefTag(this)">🏪 편의점</div>
+          <div class="tag" data-v="물류" onclick="togglePrefTag(this)">📦 물류</div>
+          <div class="tag" data-v="청소" onclick="togglePrefTag(this)">🧹 청소</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">선호 시간대</label>
+        <div class="two-col">
+          <div><label class="form-label" style="font-size:11px">시작</label><input class="inp" id="pref-start" type="time" value="09:00"></div>
+          <div><label class="form-label" style="font-size:11px">종료</label><input class="inp" id="pref-end" type="time" value="22:00"></div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">최대 거리</label>
+        <select class="inp inp-sel" id="pref-dist">
+          <option value="1">1km 이내</option>
+          <option value="3" selected>3km 이내</option>
+          <option value="5">5km 이내</option>
+          <option value="10">10km 이내</option>
+          <option value="99">거리 무관</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-yellow btn-full" onclick="savePref()">조건 저장하기</button>
+  </div>
+
   <div id="wk-profile" class="content" style="display:none">
     <div class="profile-top">
       <div class="profile-avatar">💼</div>
@@ -476,6 +511,7 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
   <div class="bottom-nav" id="worker-nav">
     <div class="nav-item active" onclick="workerNav('home',this)"><div class="nav-icon">🏠</div><div>홈</div></div>
     <div class="nav-item" onclick="workerNav('applies',this)"><div class="nav-icon">📋</div><div>내 지원</div></div>
+    <div class="nav-item" onclick="workerNav('pref',this)"><div class="nav-icon">⚙️</div><div>조건설정</div></div>
     <div class="nav-item" onclick="workerNav('profile',this)"><div class="nav-icon">👤</div><div>프로필</div></div>
   </div>
 </div>
@@ -599,6 +635,7 @@ async function loadProfile() {
     loadJobs('전체');
     loadWorkerStats();
     fillWkProfile();
+    loadPrefSettings();
   }
 }
 
@@ -704,6 +741,12 @@ async function loadApplicants(jobId, title) {
           <div class="contact-label">📞 연락처</div>
           <div class="contact-num">${app.profiles?.phone||'번호 미등록'}</div>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          ${!app.attendance_checked?`
+            <button class="btn btn-green btn-sm" onclick="confirmAttendance('${app.id}','${jobId}')">✓ 출근 확인</button>
+            <button class="btn btn-red btn-sm" style="background:var(--red);color:white" onclick="reportNoShow('${app.id}','${app.profiles?.name||'워커'}','${jobId}')">노쇼 신고</button>
+          `:`<div style="color:var(--green);font-size:13px;font-weight:600;padding:8px">✓ 출근 확인됨</div>`}
+        </div>
       `:app.status==='pending'?`
         <div class="app-actions">
           <button class="btn btn-green btn-sm" onclick="acceptApp('${app.id}','${jobId}')">수락</button>
@@ -712,6 +755,29 @@ async function loadApplicants(jobId, title) {
       `:''}
     </div>
   `).join('');
+}
+
+async function confirmAttendance(appId, jobId) {
+  await sb.from('applications').update({attendance_checked:true}).eq('id',appId);
+  showToast('출근 확인했어요!');
+  loadApplicants(jobId,'');
+}
+
+async function reportNoShow(appId, workerName, jobId) {
+  if(!confirm(`"${workerName}"님을 노쇼 신고할까요?\n3회 누적시 7일 이용 제한됩니다.`)) return;
+  await sb.from('applications').update({no_show:true, attendance_checked:true}).eq('id',appId);
+  const {data:app} = await sb.from('applications').select('worker_id').eq('id',appId);
+  if(app&&app.length>0) {
+    const {data:profile} = await sb.from('profiles').select('warning_count').eq('id',app[0].worker_id);
+    if(profile&&profile.length>0) {
+      const newCount = (profile[0].warning_count||0) + 1;
+      const isBanned = newCount >= 3;
+      const banUntil = isBanned ? new Date(Date.now() + 7*24*60*60*1000).toISOString() : null;
+      await sb.from('profiles').update({warning_count:newCount, is_banned:isBanned, ban_until:banUntil}).eq('id',app[0].worker_id);
+    }
+  }
+  showToast('노쇼 신고가 접수됐어요');
+  loadApplicants(jobId,'');
 }
 
 async function acceptApp(appId, jobId) {
@@ -744,9 +810,10 @@ function fillEmpProfile() {
 function workerNav(tab, el) {
   document.querySelectorAll('#worker-nav .nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('wk-home').style.display=tab==='home'?'block':'none';
-  document.getElementById('wk-applies').style.display=tab==='applies'?'block':'none';
-  document.getElementById('wk-profile').style.display=tab==='profile'?'block':'none';
+  ['home','applies','pref','profile'].forEach(t=>{
+    const el2=document.getElementById('wk-'+t);
+    if(el2) el2.style.display=t===tab?'block':'none';
+  });
   if(tab==='applies') loadMyApplies('전체');
 }
 
@@ -935,6 +1002,37 @@ function fillWkProfile() {
   document.getElementById('wp-phone').textContent=currentProfile.phone||'미등록';
   document.getElementById('wp-phone-edit').value=currentProfile.phone||'';
   document.getElementById('wp-date').textContent=currentProfile.created_at?.slice(0,10)||'-';
+}
+
+function togglePrefTag(el){ el.classList.toggle('selected'); }
+
+function loadPrefSettings() {
+  if(!currentProfile) return;
+  const cats = currentProfile.preferred_categories||[];
+  document.querySelectorAll('#pref-cats .tag').forEach(t=>{
+    if(cats.includes(t.dataset.v)) t.classList.add('selected');
+  });
+  if(currentProfile.preferred_start_time) document.getElementById('pref-start').value=currentProfile.preferred_start_time;
+  if(currentProfile.preferred_end_time) document.getElementById('pref-end').value=currentProfile.preferred_end_time;
+  if(currentProfile.preferred_max_distance) document.getElementById('pref-dist').value=currentProfile.preferred_max_distance;
+}
+
+async function savePref() {
+  const cats=[...document.querySelectorAll('#pref-cats .tag.selected')].map(t=>t.dataset.v);
+  const start=document.getElementById('pref-start').value;
+  const end=document.getElementById('pref-end').value;
+  const dist=parseInt(document.getElementById('pref-dist').value);
+  const {error}=await sb.from('profiles').update({
+    preferred_categories:cats,
+    preferred_start_time:start,
+    preferred_end_time:end,
+    preferred_max_distance:dist
+  }).eq('id',currentUser.id);
+  if(error){showToast('저장에 실패했어요');return;}
+  currentProfile.preferred_categories=cats;
+  currentProfile.preferred_start_time=start;
+  currentProfile.preferred_end_time=end;
+  showToast('조건을 저장했어요!');
 }
 
 async function updatePhone(role) {
