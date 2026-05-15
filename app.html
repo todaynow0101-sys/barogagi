@@ -142,8 +142,8 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
 .wage-unit { font-size:11px; color:var(--text3); }
 .job-meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
 .meta-chip { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--text2); background:var(--bg); border-radius:8px; padding:4px 10px; font-weight:500; }
-.badge-new { position:absolute; top:14px; right:14px; background:var(--yellow); color:var(--text); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; }
-.badge-fire { position:absolute; top:14px; right:14px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; animation:fireAnim 1s ease-in-out infinite; }
+.badge-new { position:absolute; bottom:18px; right:14px; background:var(--yellow); color:var(--text); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; }
+.badge-fire { position:absolute; bottom:18px; right:14px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; animation:fireAnim 1s ease-in-out infinite; }
 @keyframes fireAnim { 0%,100%{transform:scale(1)}50%{transform:scale(1.08)} }
 .badge-status { display:inline-flex; align-items:center; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700; }
 .badge-open { background:#E8FBF1; color:var(--green); }
@@ -417,7 +417,7 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
   <div id="wk-home" class="content">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div>
-        <div class="sec-title">오늘 일자리</div>
+        <div class="sec-title">오늘의 일자리</div>
         <div style="font-size:13px;color:var(--text3)">광진구 주변</div>
       </div>
       <div class="on-off on" id="onoff" onclick="toggleOnOff()">
@@ -515,6 +515,11 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
     <div class="form-group" style="margin-top:8px">
       <label class="form-label">닉네임 수정</label>
       <input class="inp" id="wp-nickname-edit" type="text" placeholder="닉네임">
+    </div>
+    <div class="form-group">
+      <label class="form-label">한마디 <span style="color:var(--text3);font-weight:400">(300자 이내)</span></label>
+      <textarea class="inp" id="wp-bio" rows="4" maxlength="300" placeholder="예: 서빙 경험 2년, 포스기 사용 가능해요. 성실하게 일합니다!" style="resize:none"></textarea>
+      <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:4px"><span id="bio-count">0</span>/300</div>
     </div>
     <div class="form-group">
       <label class="form-label">전화번호 수정</label>
@@ -653,7 +658,7 @@ async function loadProfile() {
     loadMyJobs();
     fillEmpProfile();
   } else {
-    document.getElementById('wk-name').textContent=data.nickname||maskName(data.name);
+    document.getElementById('wk-name').textContent=data.nickname||data.name;
     showScreen('worker-screen');
     loadJobs('전체');
     loadWorkerStats();
@@ -754,7 +759,7 @@ async function loadApplicants(jobId, title) {
       <div class="app-top">
         <div class="app-avatar" style="background:${colors[i%5]}">${avgs[i%5]}</div>
         <div style="flex:1">
-          <div class="app-name">${maskName(app.profiles?.name)||'워커'}</div>
+          <div class="app-name">${(app.status==='accepted'?(app.profiles?.name||'워커'):maskName(app.profiles?.name)||'워커')}</div>
           <div class="app-meta">${app.status==='pending'?'검토중':app.status==='accepted'?'수락됨':'패스'}</div>
         </div>
         <span class="badge-status badge-${app.status}">${app.status==='pending'?'검토중':app.status==='accepted'?'수락됨':'패스'}</span>
@@ -767,8 +772,13 @@ async function loadApplicants(jobId, title) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
           ${!app.attendance_checked?`
             <button class="btn btn-green btn-sm" onclick="confirmAttendance('${app.id}','${jobId}')">✓ 출근 확인</button>
-            <button class="btn btn-red btn-sm" style="background:var(--red);color:white" onclick="reportNoShow('${app.id}','${maskName(app.profiles?.name)||'워커'}','${jobId}')">노쇼 신고</button>
-          `:`<div style="color:var(--green);font-size:13px;font-weight:600;padding:8px">✓ 출근 확인됨</div>`}
+            <button class="btn btn-red btn-sm" style="background:var(--red);color:white" onclick="reportNoShow('${app.id}','${(app.status==='accepted'?(app.profiles?.name||'워커'):maskName(app.profiles?.name)||'워커')}','${jobId}')">노쇼 신고</button>
+          `:(app.no_show?`
+            <div style="display:flex;align-items:center;gap:8px;padding:8px">
+              <span style="color:var(--red);font-size:13px;font-weight:600">✕ 노쇼 처리됨</span>
+              <button class="btn btn-white btn-sm" onclick="cancelNoShow('${app.id}','${app.worker_id}','${jobId}')" style="font-size:11px;padding:5px 10px">신고 취소</button>
+            </div>
+          `:`<div style="color:var(--green);font-size:13px;font-weight:600;padding:8px">✓ 출근 확인됨</div>`)}`}
         </div>
       `:app.status==='pending'?`
         <div class="app-actions">
@@ -800,6 +810,19 @@ async function reportNoShow(appId, workerName, jobId) {
     }
   }
   showToast('노쇼 신고가 접수됐어요');
+  loadApplicants(jobId,'');
+}
+
+async function cancelNoShow(appId, workerId, jobId) {
+  if(!confirm('노쇼 신고를 취소할까요?\n경고 횟수가 1회 차감됩니다.')) return;
+  await sb.from('applications').update({no_show:false, attendance_checked:false}).eq('id',appId);
+  const {data:profile} = await sb.from('profiles').select('warning_count,is_banned').eq('id',workerId);
+  if(profile&&profile.length>0) {
+    const newCount = Math.max(0,(profile[0].warning_count||1)-1);
+    const isBanned = newCount >= 3;
+    await sb.from('profiles').update({warning_count:newCount, is_banned:isBanned, ban_until:isBanned?profile[0].ban_until:null}).eq('id',workerId);
+  }
+  showToast('노쇼 신고를 취소했어요');
   loadApplicants(jobId,'');
 }
 
@@ -891,7 +914,7 @@ async function loadJobs(cat) {
   const isUrgent = j.date===today2;
   return `
     <div class="job-card" style="animation-delay:${i*.05}s">
-      ${isUrgent?'<div class="badge-fire">🔥 오늘마감</div>':i===0?'<div class="badge-new">NEW</div>':''}
+      ${isUrgent?'<div class="badge-fire">🔥 곧 지원 마감</div>':i===0?'<div class="badge-new">NEW</div>':''}
       <div class="job-top">
         <div class="biz-icon" style="background:${bgs[j.category]||'#FFF9C4'}">${icons[j.category]||'💼'}</div>
         <div class="job-info">
@@ -1022,16 +1045,26 @@ async function loadWorkerStats() {
 
 function fillWkProfile() {
   if(!currentProfile||!currentUser) return;
-  document.getElementById('wp-name-display').textContent=currentProfile.nickname||maskName(currentProfile.name);
+  document.getElementById('wp-name-display').textContent=currentProfile.nickname||currentProfile.name;
   document.getElementById('wp-email').textContent=currentUser.email;
   document.getElementById('wp-nickname').textContent=currentProfile.nickname||'미설정';
   document.getElementById('wp-nickname-edit').value=currentProfile.nickname||'';
   document.getElementById('wp-phone').textContent=currentProfile.phone||'미등록';
   document.getElementById('wp-phone-edit').value=currentProfile.phone||'';
   document.getElementById('wp-date').textContent=currentProfile.created_at?.slice(0,10)||'-';
+  const bio = currentProfile.bio||'';
+  document.getElementById('wp-bio').value=bio;
+  document.getElementById('bio-count').textContent=bio.length;
 }
 
 function togglePrefTag(el){ el.classList.toggle('selected'); }
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const bioEl = document.getElementById('wp-bio');
+  if(bioEl) bioEl.addEventListener('input', ()=>{
+    document.getElementById('bio-count').textContent = bioEl.value.length;
+  });
+});
 
 function loadPrefSettings() {
   if(!currentProfile) return;
@@ -1068,6 +1101,11 @@ async function updateProfile(role) {
   const updates={};
   if(phone) updates.phone=phone;
   if(nickname) updates.nickname=nickname;
+  if(role==='worker') {
+    const bio=document.getElementById('wp-bio').value.trim();
+    updates.bio=bio;
+    currentProfile.bio=bio;
+  }
   if(!Object.keys(updates).length){showToast('변경 내용을 입력해주세요');return;}
   const {error}=await sb.from('profiles').update(updates).eq('id',currentUser.id);
   if(error){showToast('저장에 실패했어요');return;}
