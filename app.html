@@ -770,15 +770,7 @@ async function loadApplicants(jobId, title) {
           <div class="contact-num">${app.profiles?.phone||'번호 미등록'}</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-          ${!app.attendance_checked?`
-            <button class="btn btn-green btn-sm" onclick="confirmAttendance('${app.id}','${jobId}')">✓ 출근 확인</button>
-            <button class="btn btn-red btn-sm" style="background:var(--red);color:white" onclick="reportNoShow('${app.id}','${(app.status==='accepted'?(app.profiles?.name||'워커'):maskName(app.profiles?.name)||'워커')}','${jobId}')">노쇼 신고</button>
-          `:(app.no_show?`
-            <div style="display:flex;align-items:center;gap:8px;padding:8px">
-              <span style="color:var(--red);font-size:13px;font-weight:600">✕ 노쇼 처리됨</span>
-              <button class="btn btn-white btn-sm" onclick="cancelNoShow('${app.id}','${app.worker_id}','${jobId}')" style="font-size:11px;padding:5px 10px">신고 취소</button>
-            </div>
-          `:`<div style="color:var(--green);font-size:13px;font-weight:600;padding:8px">✓ 출근 확인됨</div>`)}`}
+          ${getAttendanceUI(app, jobId)}
         </div>
       `:app.status==='pending'?`
         <div class="app-actions">
@@ -788,6 +780,20 @@ async function loadApplicants(jobId, title) {
       `:''}
     </div>
   `).join('');
+}
+
+function getAttendanceUI(app, jobId) {
+  if(!app.attendance_checked) {
+    return `<button class="btn btn-green btn-sm" onclick="confirmAttendance('${app.id}','${jobId}')">✓ 출근 확인</button>
+            <button class="btn btn-sm" style="background:var(--red);color:white;padding:8px 14px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer" onclick="reportNoShow('${app.id}','${app.profiles?.name||'워커'}','${jobId}')">노쇼 신고</button>`;
+  } else if(app.no_show) {
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px">
+      <span style="color:var(--red);font-size:13px;font-weight:600">✕ 노쇼 처리됨</span>
+      <button class="btn btn-white btn-sm" onclick="cancelNoShow('${app.id}','${app.worker_id}','${jobId}')" style="font-size:11px;padding:5px 10px">신고 취소</button>
+    </div>`;
+  } else {
+    return '<div style="color:var(--green);font-size:13px;font-weight:600;padding:8px">✓ 출근 확인됨</div>';
+  }
 }
 
 async function confirmAttendance(appId, jobId) {
