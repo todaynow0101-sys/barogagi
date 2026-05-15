@@ -142,8 +142,8 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
 .wage-unit { font-size:11px; color:var(--text3); }
 .job-meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
 .meta-chip { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--text2); background:var(--bg); border-radius:8px; padding:4px 10px; font-weight:500; }
-.badge-new { position:absolute; bottom:18px; right:14px; background:var(--yellow); color:var(--text); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; }
-.badge-fire { position:absolute; bottom:18px; right:14px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; animation:fireAnim 1s ease-in-out infinite; }
+.badge-new { display:inline-flex; align-items:center; background:var(--yellow); color:var(--text); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:10px; }
+.badge-fire { display:inline-flex; align-items:center; background:var(--red); color:white; font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:10px; animation:fireAnim 1s ease-in-out infinite; }
 @keyframes fireAnim { 0%,100%{transform:scale(1)}50%{transform:scale(1.08)} }
 .badge-status { display:inline-flex; align-items:center; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700; }
 .badge-open { background:#E8FBF1; color:var(--green); }
@@ -914,7 +914,7 @@ async function loadJobs(cat) {
   const isUrgent = j.date===today2;
   return `
     <div class="job-card" style="animation-delay:${i*.05}s">
-      ${isUrgent?'<div class="badge-fire">🔥 곧 지원 마감</div>':i===0?'<div class="badge-new">NEW</div>':''}
+      ${isUrgent?'<div class="badge-fire">🔥 마감 임박</div>':i===0?'<div class="badge-new">NEW</div>':''}
       <div class="job-top">
         <div class="biz-icon" style="background:${bgs[j.category]||'#FFF9C4'}">${icons[j.category]||'💼'}</div>
         <div class="job-info">
@@ -926,6 +926,7 @@ async function loadJobs(cat) {
           <div class="wage-unit">원/시간</div>
         </div>
       </div>
+      ${isUrgent?'<div class="badge-fire">🔥 마감 임박</div>':i===0?'<div class="badge-new">NEW</div>':''}
       <div class="job-meta">
         <div class="meta-chip">📅 ${j.date}</div>
         <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
