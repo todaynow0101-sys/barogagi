@@ -14,7 +14,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  
 @font-face {
   font-family: Pretendard;
   src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
@@ -785,8 +784,9 @@ async function loadApplicants(jobId, title) {
 
 function getAttendanceUI(app, jobId) {
   if(!app.attendance_checked) {
+    const wName = app.profiles?.name || '워커';
     return `<button class="btn btn-green btn-sm" onclick="confirmAttendance('${app.id}','${jobId}')">✓ 출근 확인</button>
-            <button class="btn btn-sm" style="background:var(--red);color:white;padding:8px 14px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer" onclick="reportNoShow('${app.id}','${app.profiles?.name||'워커'}','${jobId}')">노쇼 신고</button>`;
+            <button class="btn btn-sm" style="background:var(--red);color:white;padding:8px 14px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer" onclick="reportNoShow('${app.id}','${wName}','${jobId}')">노쇼 신고</button>`;
   } else if(app.no_show) {
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px">
       <span style="color:var(--red);font-size:13px;font-weight:600">✕ 노쇼 처리됨</span>
