@@ -474,13 +474,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="ban-title">⛔ 이용이 제한됐어요</div>
       <div class="ban-sub" id="ban-sub-text">노쇼 3회 누적으로 7일간 이용이 제한됩니다</div>
     </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="sec-title">내 주변 알바</div>
+      <span style="font-size:22px;cursor:pointer">🔍</span>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div>
-        <div class="sec-title">내 주변 알바</div>
-        <div style="display:flex;align-items:center;gap:4px;margin-top:3px">
-          <span style="font-size:14px">📍</span>
-          <span style="font-size:13px;color:var(--text2);font-weight:500">광진구 화양동</span>
-        </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="color:var(--red);font-size:16px">📍</span>
+        <span style="font-size:14px;color:var(--text);font-weight:700">광진구 화양동</span>
       </div>
       <div class="on-off on" id="onoff" onclick="toggleOnOff()">
         <div class="knob"></div>
@@ -603,14 +604,33 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   </div>
 </div>
 
-<!-- 공고 상세 모달 -->
-<div class="modal-overlay" id="detail-overlay" onclick="closeDetail()"></div>
-<div class="modal" id="detail-modal" style="display:none">
-  <div class="modal-bar"></div>
-  <div class="modal-title" id="detail-title"></div>
-  <div id="detail-content"></div>
-  <div style="margin-top:20px;display:flex;gap:10px">
-    <button class="btn btn-red btn-full" id="detail-apply-btn" style="font-size:15px;padding:14px"></button>
+<!-- 공고 상세 풀스크린 -->
+<div id="detail-screen" style="display:none;position:fixed;inset:0;background:var(--white);z-index:300;max-width:480px;margin:0 auto;flex-direction:column;overflow-y:auto;">
+  <!-- 상단 이미지 -->
+  <div style="position:relative">
+    <div id="detail-img-wrap" style="width:100%;height:240px;background:var(--bg);overflow:hidden">
+      <img id="detail-img" style="width:100%;height:100%;object-fit:cover;display:none">
+      <div id="detail-img-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px"></div>
+    </div>
+    <button onclick="closeDetail()" style="position:absolute;top:16px;left:16px;width:36px;height:36px;background:rgba(0,0,0,.4);border:none;border-radius:50%;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+  </div>
+  <!-- 내용 -->
+  <div style="padding:20px 20px 100px">
+    <div id="detail-title" style="font-size:20px;font-weight:900;color:var(--navy);margin-bottom:6px"></div>
+    <div id="detail-wage" style="font-size:22px;font-weight:900;color:var(--red);margin-bottom:20px"></div>
+    <div id="detail-info-list" style="margin-bottom:20px"></div>
+    <div id="detail-desc-wrap" style="display:none;margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">상세 내용</div>
+      <div id="detail-desc" style="font-size:14px;color:var(--text2);line-height:1.7"></div>
+    </div>
+    <div id="detail-skills-wrap" style="display:none;margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">필요 역량</div>
+      <div id="detail-skills" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+    </div>
+  </div>
+  <!-- 하단 고정 버튼 -->
+  <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:16px 20px;background:var(--white);border-top:1px solid var(--border)">
+    <button class="btn btn-red btn-full" id="detail-apply-btn" style="font-size:16px;padding:16px"></button>
   </div>
 </div>
 
@@ -727,6 +747,7 @@ async function loadProfile() {
     document.getElementById('wk-name').textContent=data.nickname||data.name;
     showScreen('worker-screen');
     checkBanStatus(); loadJobs('전체'); loadWorkerStats(); fillWkProfile(); loadPrefSettings(); loadUnreadCount();
+    setTimeout(checkNewAccepted, 1500);
   }
 }
 function showScreen(id) {
@@ -1011,7 +1032,7 @@ function workerNav(tab,el){
     const e=document.getElementById('wk-'+t);
     if(e)e.style.display=t===tab?'block':'none';
   });
-  if(tab==='applies')loadMyApplies('전체');
+  if(tab==='applies'){loadMyApplies('전체');checkNewAccepted();}
   if(tab==='chat')loadChatList();
 }
 async function toggleOnOff(){
@@ -1053,55 +1074,28 @@ async function loadJobs(cat){
   const bgs={'외식':'#FFF0F0','카페':'#E8F5E9','편의점':'#FFF8E8','물류':'#E3F2FD','청소':'#FCE4EC'};
   el.innerHTML=sorted.map((j,i)=>{
     const dist=(Math.random()*3+.3).toFixed(1);
-    const hasImg=j.image_url;
     const isUrgent=j.date===today;
+    const thumb=j.image_url||'';
+    const defaultBg=bgs[j.category]||'#FFF0F0';
+    const defaultIcon=icons[j.category]||'💼';
     return `
-    <div class="job-card" style="animation-delay:${i*.05}s;padding:0;overflow:hidden" onclick="openDetail('${j.id}')">
-      ${hasImg?`
-        <div style="position:relative;width:100%;height:180px">
-          <img src="${j.image_url}" style="width:100%;height:100%;object-fit:cover">
-          <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.7))"></div>
-          ${isUrgent?'<div class="badge-fire" style="position:absolute;top:12px;left:12px;margin:0">🔥 마감 임박</div>':i===0?'<div class="badge-new" style="position:absolute;top:12px;left:12px;margin:0">NEW</div>':''}
-          <div style="position:absolute;bottom:12px;left:14px;right:14px">
-            <div style="font-size:16px;font-weight:700;color:white;margin-bottom:2px">${j.description.slice(0,20)}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.8)">${j.employer_name} · 📍${dist}km</div>
-          </div>
-          <div style="position:absolute;bottom:12px;right:14px;text-align:right">
-            <div style="font-size:18px;font-weight:900;color:white">${(j.wage||0).toLocaleString()}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7)">원/시간</div>
-          </div>
+    <div onclick="openDetail('${j.id}')" style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;animation:fadeUp .25s ease both;animation-delay:${i*.05}s">
+      <!-- 썸네일 -->
+      <div style="width:88px;height:88px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${defaultBg};display:flex;align-items:center;justify-content:center;font-size:32px">
+        ${thumb?`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover">`:`${defaultIcon}`}
+      </div>
+      <!-- 정보 -->
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          ${isUrgent?'<span style="background:var(--red);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">🔥 마감임박</span>':i===0?'<span style="background:var(--yellow);color:var(--navy);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">NEW</span>':''}
         </div>
-        <div style="padding:14px 16px 16px">
-          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
-            <div class="meta-chip">📅 ${j.date}</div>
-            <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
-            <div class="meta-chip">👤 ${j.headcount||1}명</div>
-          </div>
-          <button class="btn btn-red btn-full" id="ab-${j.id}" onclick="event.stopPropagation();applyJob('${j.id}',this)" style="font-size:15px;padding:14px">지원하기</button>
-        </div>
-      `:`
-        <div style="padding:18px">
-          ${isUrgent?'<div class="badge-fire">🔥 마감 임박</div>':i===0?'<div class="badge-new">NEW</div>':''}
-          <div class="job-top">
-            <div class="biz-icon" style="background:${bgs[j.category]||'#FFF0F0'}">${icons[j.category]||'💼'}</div>
-            <div class="job-info">
-              <div class="job-title">${j.description.slice(0,22)}</div>
-              <div class="job-biz">${j.employer_name} · ${j.category}</div>
-            </div>
-            <div class="job-wage">
-              <div class="wage-num">${(j.wage||0).toLocaleString()}</div>
-              <div class="wage-unit">원/시간</div>
-            </div>
-          </div>
-          <div class="job-meta">
-            <div class="meta-chip">📅 ${j.date}</div>
-            <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
-            <div class="meta-chip">📍 ${dist}km</div>
-            <div class="meta-chip">👤 ${j.headcount||1}명</div>
-          </div>
-          <button class="btn btn-red btn-full" id="ab-${j.id}" onclick="event.stopPropagation();applyJob('${j.id}',this)" style="font-size:15px;padding:14px">지원하기</button>
-        </div>
-      `}
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.description.slice(0,18)}</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:6px">시급 <strong style="color:var(--navy)">${(j.wage||0).toLocaleString()}원</strong></div>
+        <div style="font-size:12px;color:var(--text3)">${j.start_time||''}~${j.end_time||''}</div>
+        <div style="font-size:12px;color:var(--text3)">${j.employer_name}</div>
+      </div>
+      <!-- 거리 -->
+      <div style="font-size:12px;font-weight:700;color:var(--red);flex-shrink:0;align-self:flex-end">${dist}km</div>
     </div>`;
   }).join('');
   checkApplied(sorted.map(j=>j.id));
@@ -1113,34 +1107,48 @@ async function openDetail(jobId){
   const j=jobs[0];
   const icons={'외식':'🍜','카페':'☕','편의점':'🏪','물류':'📦','청소':'🧹'};
   const h=calcHours(j.start_time,j.end_time);
+  const dist=(Math.random()*3+.3).toFixed(1);
+
+  // 이미지
+  const img=document.getElementById('detail-img');
+  const ph=document.getElementById('detail-img-placeholder');
+  if(j.image_url){img.src=j.image_url;img.style.display='block';ph.style.display='none';}
+  else{img.style.display='none';ph.style.display='flex';ph.textContent=icons[j.category]||'💼';}
+
+  // 제목 + 시급
   document.getElementById('detail-title').textContent=j.description;
-  document.getElementById('detail-content').innerHTML=`
-    ${j.image_url?`<img src="${j.image_url}" style="width:calc(100% + 48px);margin:-28px -24px 20px;height:220px;object-fit:cover;border-radius:0">`:``}
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <div class="biz-icon" style="background:${bgs[j.category]||'#FFF0F0'};width:48px;height:48px">${icons[j.category]||'💼'}</div>
-      <div>
-        <div style="font-size:17px;font-weight:700">${j.description}</div>
-        <div style="font-size:13px;color:var(--text3)">${j.employer_name} · ${j.category}</div>
-      </div>
+  document.getElementById('detail-wage').textContent='시급 '+(j.wage||0).toLocaleString()+'원';
+
+  // 정보 리스트
+  document.getElementById('detail-info-list').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--red);font-size:18px">⏰</span>
+      <span style="font-size:14px;color:var(--text2)">${j.start_time||''} - ${j.end_time||''}</span>
     </div>
-    <div style="background:var(--red-bg);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-size:12px;color:var(--text3)">예상 일당</div>
-        <div style="font-size:24px;font-weight:900;color:var(--red)">${(h*(j.wage||0)).toLocaleString()}원</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:12px;color:var(--text3)">시급</div>
-        <div style="font-size:18px;font-weight:700">${(j.wage||0).toLocaleString()}원</div>
-      </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--red);font-size:18px">📅</span>
+      <span style="font-size:14px;color:var(--text2)">${j.date} · 예상 ${(h*(j.wage||0)).toLocaleString()}원</span>
     </div>
-    <div class="detail-row"><span class="detail-label">📅 날짜</span><span class="detail-value">${j.date}</span></div>
-    <div class="detail-row"><span class="detail-label">⏰ 시간</span><span class="detail-value">${j.start_time}~${j.end_time} (${h}시간)</span></div>
-    <div class="detail-row"><span class="detail-label">📍 거리</span><span class="detail-value">${(Math.random()*3+.3).toFixed(1)}km</span></div>
-    <div class="detail-row"><span class="detail-label">👤 모집</span><span class="detail-value">${j.headcount||1}명</span></div>
-    ${j.skills&&j.skills.length?`<div class="detail-row"><span class="detail-label">🛠 역량</span><span class="detail-value">${j.skills.join(', ')}</span></div>`:''}`;
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0">
+      <span style="color:var(--red);font-size:18px">📍</span>
+      <span style="font-size:14px;color:var(--text2)">광진구 화양동 · ${dist}km</span>
+    </div>`;
+
+  // 상세 내용
+  const descWrap=document.getElementById('detail-desc-wrap');
+  if(j.description){descWrap.style.display='block';document.getElementById('detail-desc').textContent=j.description;}
+  else descWrap.style.display='none';
+
+  // 역량 태그
+  const skillsWrap=document.getElementById('detail-skills-wrap');
+  if(j.skills&&j.skills.length){
+    skillsWrap.style.display='block';
+    document.getElementById('detail-skills').innerHTML=j.skills.map(s=>`<span style="padding:6px 14px;border-radius:20px;background:var(--red-bg);color:var(--red);font-size:13px;font-weight:600">${s}</span>`).join('');
+  } else skillsWrap.style.display='none';
+
+  // 지원 버튼
   const applyBtn=document.getElementById('detail-apply-btn');
-  applyBtn.textContent='지원하기';applyBtn.className='btn btn-red btn-full';applyBtn.disabled=false;
-  applyBtn.style.background='';applyBtn.style.color='';
+  applyBtn.textContent='지원하기';applyBtn.style.background='var(--red)';applyBtn.style.color='white';applyBtn.disabled=false;
   applyBtn.onclick=()=>applyJobFromDetail(jobId);
   const {data:ex}=await sb.from('applications').select('id,status').eq('job_id',jobId).eq('worker_id',currentUser.id);
   if(ex&&ex.length>0){
@@ -1148,12 +1156,13 @@ async function openDetail(jobId){
     applyBtn.textContent=st==='accepted'?'✓ 채용 확정됐어요':st==='cancelled'?'취소된 공고':'✓ 이미 지원함';
     applyBtn.disabled=true;applyBtn.style.background='var(--bg)';applyBtn.style.color='var(--text3)';
   }
-  document.getElementById('detail-modal').style.display='block';
-  document.getElementById('detail-overlay').classList.add('show');
+
+  const screen=document.getElementById('detail-screen');
+  screen.style.display='flex';
+  screen.scrollTop=0;
 }
 function closeDetail(){
-  document.getElementById('detail-modal').style.display='none';
-  document.getElementById('detail-overlay').classList.remove('show');
+  document.getElementById('detail-screen').style.display='none';
 }
 function calcHours(s,e){
   if(!s||!e)return 0;
@@ -1209,37 +1218,70 @@ function renderApplies(list){
   el.innerHTML=list.map(app=>{
     const j=app.jobs;if(!j)return '';
     const sLabel=app.status==='pending'?'검토중':app.status==='accepted'?'채용 확정':app.status==='cancelled'?'취소됨':'패스됨';
-    const h=calcHours(j.start_time,j.end_time);
+    const sColor=app.status==='accepted'?'var(--green)':app.status==='pending'?'var(--yellow)':'var(--text3)';
+    const thumb=j.image_url||'';
+    const defaultBg=bgs[j.category]||'#FFF0F0';
+    const defaultIcon=icons[j.category]||'💼';
     return `
-    <div class="job-card">
-      <div class="job-top">
-        <div class="biz-icon" style="background:${bgs[j.category]||'#FFF0F0'}">${icons[j.category]||'💼'}</div>
-        <div class="job-info">
-          <div class="job-title">${j.description?.slice(0,22)||''}</div>
-          <div class="job-biz">${j.employer_name}</div>
+    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;background:${defaultBg};display:flex;align-items:center;justify-content:center;font-size:26px">
+          ${thumb?`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover">`:`${defaultIcon}`}
         </div>
-        <div class="job-wage">
-          <div class="wage-num">${(j.wage||0).toLocaleString()}</div>
-          <div class="wage-unit">원/시간</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.description?.slice(0,18)||''}</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:4px">시급 <strong>${(j.wage||0).toLocaleString()}원</strong></div>
+          <div style="font-size:12px;color:var(--text3)">${j.date}</div>
         </div>
-      </div>
-      <div class="job-meta">
-        <div class="meta-chip">📅 ${j.date}</div>
-        <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
-        <div class="meta-chip">💰 ${(h*(j.wage||0)).toLocaleString()}원</div>
-        <span class="badge-status badge-${app.status}">${sLabel}</span>
+        <div style="font-size:12px;font-weight:700;color:${sColor};flex-shrink:0">${sLabel}</div>
       </div>
       ${app.status==='accepted'?`
-        <div class="contact-box">
-          <div class="contact-label">📞 사장님 연락처</div>
-          <div class="contact-num">${j.employer_phone||'번호 미등록'}</div>
+        <div style="margin-top:12px;padding:12px;background:var(--red-bg);border-radius:10px">
+          <div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:4px">📞 사장님 연락처</div>
+          <div style="font-size:17px;font-weight:900">${j.employer_phone||'번호 미등록'}</div>
         </div>
-        <button class="btn btn-navy btn-full btn-sm" onclick="openChatAsWorker('${app.id}','${j.employer_name}')" style="margin-top:10px">💬 사장님께 채팅하기</button>
+        <button class="btn btn-navy btn-full btn-sm" onclick="openChatAsWorker('${app.id}','${j.employer_name}')" style="margin-top:8px;width:100%">💬 사장님께 채팅하기</button>
       `:''}
-      ${app.status==='pending'?`<button onclick="cancelApply('${app.id}')" style="width:100%;margin-top:8px;padding:10px;background:transparent;color:var(--red);border:1.5px solid #FFD0D0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">지원 취소</button>`:''}
+      ${app.status==='pending'?`
+        <button onclick="cancelApply('${app.id}')" style="width:100%;margin-top:10px;padding:10px;background:transparent;color:var(--red);border:1.5px solid #FFD0D0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">지원 취소</button>
+      `:''}
     </div>`;
   }).join('');
 }
+function showWorkerCongrats(jobDesc, employerName){
+  const overlay=document.createElement('div');
+  overlay.id='worker-congrats-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:white;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;max-width:480px;margin:0 auto;animation:fadeUp .3s ease';
+  overlay.innerHTML=`
+    <div style="font-size:72px;margin-bottom:8px;animation:bounce 1s ease infinite">🎉</div>
+    <div style="font-size:14px;color:var(--text3);margin-bottom:8px">채용이 확정됐어요</div>
+    <div style="font-size:26px;font-weight:900;color:var(--navy);margin-bottom:6px;letter-spacing:-.5px">축하해요! 🙌</div>
+    <div style="font-size:16px;font-weight:700;color:var(--red);margin-bottom:16px">${employerName}</div>
+    <div style="background:var(--bg);border-radius:14px;padding:16px 20px;margin-bottom:28px;width:100%">
+      <div style="font-size:13px;color:var(--text3);margin-bottom:4px">확정된 알바</div>
+      <div style="font-size:15px;font-weight:700;color:var(--navy)">${jobDesc}</div>
+    </div>
+    <div style="font-size:13px;color:var(--text3);line-height:1.7;margin-bottom:28px">사장님 연락처가 공개됐어요<br>바로 연락해서 출근 일정을 확인해보세요!</div>
+    <button onclick="document.getElementById('worker-congrats-overlay').remove()" style="padding:16px 48px;background:var(--red);color:white;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;width:100%">확인했어요!</button>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function checkNewAccepted(){
+  // 마지막 확인 시간 이후 새로 수락된 것 체크
+  const lastCheck = localStorage.getItem('lastAcceptedCheck') || '2000-01-01';
+  const {data} = await sb.from('applications')
+    .select('*,jobs(description,employer_name)')
+    .eq('worker_id',currentUser.id)
+    .eq('status','accepted')
+    .gt('created_at',lastCheck);
+  localStorage.setItem('lastAcceptedCheck', new Date().toISOString());
+  if(data&&data.length>0){
+    const app = data[0];
+    showWorkerCongrats(app.jobs?.description||'알바', app.jobs?.employer_name||'사장님');
+  }
+}
+
 async function cancelApply(appId){
   if(!confirm('지원을 취소할까요?'))return;
   await sb.from('applications').update({status:'cancelled',cancelled_at:new Date().toISOString()}).eq('id',appId);
