@@ -324,6 +324,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <button class="emp-tab active" onclick="empTab('dash')">대시보드</button>
     <button class="emp-tab" onclick="empTab('post')">공고 등록</button>
     <button class="emp-tab" onclick="empTab('jobs')">내 공고</button>
+    <button class="emp-tab" onclick="empTab('chat')">채팅</button>
     <button class="emp-tab" onclick="empTab('profile')">프로필</button>
   </div>
 
@@ -431,6 +432,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="sec-title" id="app-section-title">지원자</div>
       <div id="applicant-list" style="margin-top:14px"></div>
     </div>
+  </div>
+
+  <!-- 사장님 채팅 -->
+  <div id="emp-chat" class="content" style="display:none">
+    <div class="sec-title">채팅</div>
+    <div class="sec-sub">채용 확정된 알바생과 대화하세요</div>
+    <div id="emp-chat-list"><div class="loading"><div class="spinner"></div></div></div>
   </div>
 
   <!-- 사업주 프로필 -->
@@ -635,7 +643,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 
 <!-- 채팅 화면 -->
-<div class="chat-screen" id="chat-screen">
+<div class="chat-screen" id="chat-screen" style="left:0;right:0;max-width:480px;margin:0 auto;">
   <div class="chat-header">
     <div class="chat-back" onclick="closeChat()">←</div>
     <div class="chat-name" id="chat-partner-name"></div>
@@ -772,11 +780,12 @@ function checkBanStatus() {
 // EMPLOYER
 function empTab(tab) {
   document.querySelectorAll('.emp-tab').forEach((b,i)=>b.classList.toggle('active',['dash','post','jobs','profile'][i]===tab));
-  ['dash','post','jobs','profile'].forEach(t=>{
+  ['dash','post','jobs','chat','profile'].forEach(t=>{
     const el=document.getElementById('emp-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
   if(tab==='jobs')loadMyJobs();
+  if(tab==='chat')loadEmpChatList();
 }
 function toggleTag(el){el.classList.toggle('selected');}
 function togglePrefTag(el){el.classList.toggle('selected');}
@@ -906,7 +915,7 @@ async function loadApplicants(jobId,title) {
   document.getElementById('app-section-title').textContent=`"${title}" 지원자`;
   const el=document.getElementById('applicant-list');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const {data}=await sb.from('applications').select('*,profiles(name,phone,warning_count,nickname)').eq('job_id',jobId).neq('status','cancelled');
+  const {data}=await sb.from('applications').select('id,status,attendance_checked,no_show,worker_id,job_id,profiles(name,phone,warning_count,nickname)').eq('job_id',jobId).neq('status','cancelled');
   if(!data||!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">아직 지원자가 없어요</div></div>';return;}
   const avgs=['👩','👨','👩','👨','👩'];
   const colors=['#FFE8E8','#E8F5E9','#E3F2FD','#FDE8FF','#FFF8E8'];
@@ -1008,6 +1017,36 @@ async function passApp(appId,jobId){
   await sb.from('applications').update({status:'rejected'}).eq('id',appId);
   showToast('패스했어요');loadApplicants(jobId,'');
 }
+async function loadEmpChatList(){
+  const el=document.getElementById('emp-chat-list');
+  if(!el)return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  // 내 공고에 지원한 사람 중 수락된 것
+  const {data:myJobs}=await sb.from('jobs').select('id').eq('employer_id',currentUser.id);
+  if(!myJobs||!myJobs.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">채팅 내역이 없어요<br>채용 확정 후 채팅을 시작하세요</div></div>';
+    return;
+  }
+  const jobIds=myJobs.map(j=>j.id);
+  const {data:apps}=await sb.from('applications')
+    .select('*,jobs(description),profiles(name,nickname)')
+    .in('job_id',jobIds)
+    .eq('status','accepted');
+  if(!apps||!apps.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">채팅 내역이 없어요<br>채용 확정 후 채팅을 시작하세요</div></div>';
+    return;
+  }
+  el.innerHTML=apps.map(app=>`
+    <div class="card" style="cursor:pointer;display:flex;align-items:center;gap:12px" onclick="openChatAsEmployer('${app.id}','${app.profiles?.nickname||app.profiles?.name||'알바생'}')">
+      <div style="width:44px;height:44px;background:var(--red-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">💼</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700">${app.profiles?.nickname||app.profiles?.name||'알바생'}</div>
+        <div style="font-size:12px;color:var(--text3)">${app.jobs?.description?.slice(0,20)||''}</div>
+      </div>
+      <div style="font-size:20px;color:var(--text3)">›</div>
+    </div>`).join('');
+}
+
 async function loadOnlineCount(){
   const {count}=await sb.from('profiles').select('*',{count:'exact',head:true}).eq('role','worker').eq('is_online',true);
   const el=document.getElementById('online-count');
@@ -1372,11 +1411,17 @@ async function openChatScreen(appId){
   screen.classList.add('show');
   await loadMessages(appId);
   // 실시간 구독
-  if(chatSubscription)chatSubscription.unsubscribe();
-  chatSubscription=sb.channel('messages:'+appId)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`application_id=eq.${appId}`},
-      payload=>{appendMessage(payload.new);})
-    .subscribe();
+  if(chatSubscription){chatSubscription.unsubscribe();chatSubscription=null;}
+  chatSubscription=sb.channel('chat-'+appId)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},
+      payload=>{
+        if(payload.new.application_id===appId && payload.new.sender_id!==currentUser.id){
+          appendMessage(payload.new);
+        }
+      })
+    .subscribe((status)=>{
+      console.log('채팅 구독 상태:', status);
+    });
   // 읽음 처리
   await sb.from('messages').update({is_read:true}).eq('application_id',appId).neq('sender_id',currentUser.id);
   loadUnreadCount();
@@ -1389,27 +1434,41 @@ function closeChat(){
 async function loadMessages(appId){
   const el=document.getElementById('chat-messages');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const {data}=await sb.from('messages').select('*,profiles(name,nickname)').eq('application_id',appId).order('created_at',{ascending:true});
+  const {data,error}=await sb.from('messages').select('*').eq('application_id',appId).order('created_at',{ascending:true});
+  if(error){console.error('메시지 로드 오류:',error);el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3)">메시지를 불러올 수 없어요</div>';return;}
   el.innerHTML='';
   (data||[]).forEach(m=>appendMessage(m));
   el.scrollTop=el.scrollHeight;
 }
 function appendMessage(msg){
   const el=document.getElementById('chat-messages');
-  const isMine=msg.sender_id===currentUser.id;
-  const time=new Date(msg.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  if(!el)return;
+  const isMine=msg.sender_id===currentUser?.id;
+  const time=msg.created_at?new Date(msg.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
   const div=document.createElement('div');
   div.className='msg-wrap'+(isMine?' mine':'');
-  div.innerHTML=`<div class="msg-bubble ${isMine?'mine':'theirs'}">${msg.content}</div><div class="msg-time">${time}</div>`;
+  div.innerHTML=`<div class="msg-bubble ${isMine?'mine':'theirs'}">${msg.content||''}</div><div class="msg-time">${time}</div>`;
   el.appendChild(div);
   el.scrollTop=el.scrollHeight;
 }
 async function sendMessage(){
   const inp=document.getElementById('chat-input');
-  const content=inp.value.trim();
-  if(!content||!currentChatAppId)return;
+  const msg=inp.value.trim();
+  if(!msg||!currentChatAppId)return;
   inp.value='';
-  await sb.from('messages').insert({application_id:currentChatAppId,sender_id:currentUser.id,content});
+  const {data,error}=await sb.from('messages').insert({
+    application_id:currentChatAppId,
+    sender_id:currentUser.id,
+    content:msg
+  }).select();
+  if(error){
+    console.error('메시지 전송 오류:',error);
+    inp.value=msg;
+    showToast('메시지 전송에 실패했어요');
+    return;
+  }
+  // realtime이 안될 경우 직접 추가
+  if(data&&data.length>0) appendMessage(data[0]);
 }
 async function loadChatList(){
   const el=document.getElementById('chat-list');
