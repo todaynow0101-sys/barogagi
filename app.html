@@ -3,271 +3,280 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#FFE000">
+<meta name="theme-color" content="#FF686B">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="바로가기">
 <link rel="manifest" href="/barogagi/manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 <title>바로가기</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-@font-face {
-  font-family: Pretendard;
-  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
-  font-weight: 400;
-}
-@font-face {
-  font-family: Pretendard;
-  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Medium.woff') format('woff');
-  font-weight: 500;
-}
-@font-face {
-  font-family: Pretendard;
-  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Bold.woff') format('woff');
-  font-weight: 700;
-}
-
 :root {
-  --yellow: #FFE000;
-  --yellow-dark: #F5D000;
-  --yellow-bg: #FFFDE7;
-  --text: #191919;
-  --text2: #555;
-  --text3: #999;
-  --bg: #F7F7F8;
-  --white: #FFFFFF;
-  --border: #EBEBEB;
-  --green: #00C471;
-  --red: #FF4B4B;
-  --shadow: 0 2px 12px rgba(0,0,0,0.07);
+  --red:#FF686B; --red-dark:#E85558; --red-bg:#FFF0F0;
+  --navy:#1F2A44; --navy-light:#2E3D5F;
+  --pink:#FFD6CC;
+  --text:#1F2A44; --text2:#555; --text3:#999;
+  --bg:#F5F6FA; --white:#FFFFFF; --border:#ECEEF2;
+  --green:#00C471; --yellow:#FFB800;
+  --shadow:0 2px 16px rgba(31,42,68,0.08);
+  --shadow-lg:0 8px 32px rgba(31,42,68,0.12);
 }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;}
 
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg); color:var(--text); min-height:100vh; max-width:480px; margin:0 auto; }
-
-.screen { display:none !important; min-height:100vh; }
-.screen.active { display:block !important; }
-#auth-screen.active { display:flex !important; flex-direction:column; justify-content:center; background:var(--white); }
+/* SCREENS */
+.screen{display:none!important;min-height:100vh;}
+.screen.active{display:block!important;}
+#auth-screen.active{display:flex!important;flex-direction:column;background:var(--white);}
 
 /* AUTH */
-.auth-wrap { padding:0 28px 40px; }
-.auth-logo-area { text-align:center; padding:60px 0 40px; }
-.auth-logo { font-size:38px; font-weight:700; letter-spacing:-2px; color:var(--text); }
-.auth-logo-dot { display:inline-block; width:10px; height:10px; background:var(--yellow); border-radius:50%; margin-left:3px; vertical-align:super; }
-.auth-sub { font-size:14px; color:var(--text3); margin-top:6px; }
-.tab-row { display:flex; background:var(--bg); border-radius:12px; padding:4px; margin-bottom:24px; }
-.tab-btn { flex:1; padding:10px; font-family:inherit; font-size:14px; font-weight:500; border:none; cursor:pointer; background:transparent; color:var(--text3); border-radius:9px; transition:all .2s; }
-.tab-btn.active { background:var(--white); color:var(--text); box-shadow:var(--shadow); }
-.role-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
-.role-card { background:var(--white); border:2px solid var(--border); border-radius:14px; padding:18px 12px; text-align:center; cursor:pointer; transition:all .2s; }
-.role-card.selected { border-color:var(--yellow); background:var(--yellow-bg); }
-.role-icon { font-size:26px; margin-bottom:8px; }
-.role-label { font-size:14px; font-weight:700; }
-.role-sub { font-size:11px; color:var(--text3); margin-top:3px; }
-.inp { width:100%; background:var(--bg); border:1.5px solid var(--border); border-radius:12px; padding:14px 16px; color:var(--text); font-family:inherit; font-size:15px; outline:none; margin-bottom:10px; transition:border-color .2s; }
-.inp:focus { border-color:var(--yellow-dark); background:var(--white); }
-.inp::placeholder { color:var(--text3); }
-.inp-sel { appearance:none; background-color:var(--bg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%23999' d='M7 9L2 4h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
-.auth-btn { width:100%; padding:16px; background:var(--yellow); color:var(--text); border:none; border-radius:14px; font-family:inherit; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; transition:all .15s; }
-.auth-btn:hover { background:var(--yellow-dark); }
-.auth-btn:disabled { opacity:.5; cursor:not-allowed; }
-.err-msg { color:var(--red); font-size:13px; margin-bottom:8px; text-align:center; min-height:18px; }
-.auth-msg { font-size:13px; color:var(--text3); text-align:center; margin-top:18px; }
-.auth-msg span { color:var(--text); font-weight:700; cursor:pointer; text-decoration:underline; }
+.auth-hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);padding:60px 28px 40px;text-align:center;}
+.auth-logo-big{font-size:42px;font-weight:900;color:white;letter-spacing:-2px;margin-bottom:8px;}
+.auth-logo-big span{color:var(--red);}
+.auth-tagline{font-size:14px;color:rgba(255,255,255,.6);margin-bottom:0;}
+.auth-body{padding:28px 28px 40px;flex:1;}
+.tab-row{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:24px;}
+.tab-btn{flex:1;padding:10px;font-family:inherit;font-size:14px;font-weight:500;border:none;cursor:pointer;background:transparent;color:var(--text3);border-radius:9px;transition:all .2s;}
+.tab-btn.active{background:var(--white);color:var(--text);box-shadow:var(--shadow);font-weight:700;}
+.role-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.role-card{background:var(--white);border:2px solid var(--border);border-radius:16px;padding:20px 12px;text-align:center;cursor:pointer;transition:all .2s;}
+.role-card.selected{border-color:var(--red);background:var(--red-bg);}
+.role-icon{font-size:28px;margin-bottom:8px;}
+.role-label{font-size:14px;font-weight:700;}
+.role-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.inp{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-family:inherit;font-size:15px;outline:none;margin-bottom:10px;transition:border-color .2s;}
+.inp:focus{border-color:var(--red);background:var(--white);}
+.inp::placeholder{color:var(--text3);}
+.inp-sel{appearance:none;background-color:var(--bg);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%23999' d='M7 9L2 4h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.auth-btn{width:100%;padding:16px;background:var(--red);color:white;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;transition:all .15s;}
+.auth-btn:hover{background:var(--red-dark);}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;}
+.err-msg{color:var(--red);font-size:13px;margin-bottom:8px;text-align:center;min-height:18px;}
+.auth-switch{font-size:13px;color:var(--text3);text-align:center;margin-top:16px;}
+.auth-switch span{color:var(--red);font-weight:700;cursor:pointer;}
+.remember-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.remember-row input{width:18px;height:18px;accent-color:var(--red);cursor:pointer;}
+.remember-row label{font-size:14px;color:var(--text2);cursor:pointer;}
 
 /* HEADER */
-.header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; background:var(--white); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
-.logo { font-size:22px; font-weight:700; letter-spacing:-1px; }
-.logo-dot { display:inline-block; width:7px; height:7px; background:var(--yellow); border-radius:50%; margin-left:1px; vertical-align:super; }
-.header-right { display:flex; align-items:center; gap:8px; }
-.user-name { font-size:14px; font-weight:500; color:var(--text2); }
-.logout-btn { font-size:13px; color:var(--text3); background:none; border:none; cursor:pointer; font-family:inherit; padding:4px 8px; }
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:var(--navy);}
+.logo span{color:var(--red);}
+.header-right{display:flex;align-items:center;gap:8px;}
+.user-chip{font-size:14px;font-weight:600;color:var(--text2);}
+.logout-btn{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:inherit;}
 
-/* EMPLOYER TABS */
-.emp-tab-row { display:flex; background:var(--white); border-bottom:1px solid var(--border); position:sticky; top:57px; z-index:99; }
-.emp-tab { flex:1; padding:14px 8px; font-family:inherit; font-size:14px; font-weight:500; border:none; cursor:pointer; background:transparent; color:var(--text3); border-bottom:2.5px solid transparent; transition:all .2s; }
-.emp-tab.active { color:var(--text); border-bottom-color:var(--yellow-dark); }
+/* EMP TABS */
+.emp-tab-row{display:flex;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:57px;z-index:99;}
+.emp-tab{flex:1;padding:14px 8px;font-family:inherit;font-size:13px;font-weight:500;border:none;cursor:pointer;background:transparent;color:var(--text3);border-bottom:2.5px solid transparent;transition:all .2s;}
+.emp-tab.active{color:var(--red);border-bottom-color:var(--red);font-weight:700;}
 
 /* CONTENT */
-.content { padding:20px 18px 100px; }
-.sec-title { font-size:18px; font-weight:700; letter-spacing:-.5px; margin-bottom:4px; }
-.sec-sub { font-size:13px; color:var(--text3); margin-bottom:18px; }
+.content{padding:20px 18px 100px;}
+
+/* DASHBOARD */
+.dashboard-greeting{background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:20px;padding:24px;margin-bottom:20px;color:white;}
+.greeting-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:6px;}
+.greeting-name{font-size:22px;font-weight:900;margin-bottom:16px;}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.dash-stat{background:rgba(255,255,255,.12);border-radius:12px;padding:14px;text-align:center;}
+.dash-stat-num{font-size:24px;font-weight:900;}
+.dash-stat-label{font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;}
 
 /* LIVE PILL */
-.live-pill { display:inline-flex; align-items:center; gap:6px; background:var(--yellow-bg); border:1.5px solid var(--yellow); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:500; color:var(--text); margin-bottom:20px; }
-.live-dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation:blink 1.4s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.live-pill{display:inline-flex;align-items:center;gap:6px;background:var(--red-bg);border:1.5px solid var(--red);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--red);margin-bottom:20px;}
+.live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* FORM */
-.form-group { margin-bottom:16px; }
-.form-label { font-size:12px; font-weight:700; color:var(--text2); margin-bottom:8px; display:block; }
-.two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.tag-wrap { display:flex; flex-wrap:wrap; gap:7px; }
-.tag { padding:7px 14px; border-radius:20px; background:var(--white); border:1.5px solid var(--border); font-size:13px; cursor:pointer; color:var(--text2); transition:all .15s; user-select:none; font-weight:500; }
-.tag.selected { background:var(--yellow); border-color:var(--yellow-dark); color:var(--text); font-weight:700; }
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;display:block;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:7px;}
+.tag{padding:7px 14px;border-radius:20px;background:var(--white);border:1.5px solid var(--border);font-size:13px;cursor:pointer;color:var(--text2);transition:all .15s;user-select:none;font-weight:500;}
+.tag.selected{background:var(--red);border-color:var(--red);color:white;font-weight:700;}
 
 /* BUTTONS */
-.btn { padding:13px 20px; border-radius:12px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; border:none; transition:all .15s; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
-.btn:active { transform:scale(.97); }
-.btn-yellow { background:var(--yellow); color:var(--text); }
-.btn-yellow:hover { background:var(--yellow-dark); }
-.btn-yellow:disabled { opacity:.5; cursor:not-allowed; }
-.btn-white { background:var(--white); color:var(--text); border:1.5px solid var(--border); }
-.btn-green { background:var(--green); color:white; }
-.btn-red { background:var(--red); color:white; }
-.btn-full { width:100%; }
-.btn-sm { padding:8px 14px; font-size:13px; border-radius:10px; }
+.btn{padding:13px 20px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.btn:active{transform:scale(.97);}
+.btn-red{background:var(--red);color:white;}
+.btn-red:hover{background:var(--red-dark);}
+.btn-red:disabled{opacity:.5;cursor:not-allowed;}
+.btn-navy{background:var(--navy);color:white;}
+.btn-white{background:var(--white);color:var(--text);border:1.5px solid var(--border);}
+.btn-green{background:var(--green);color:white;}
+.btn-ghost-red{background:transparent;color:var(--red);border:1.5px solid var(--red);}
+.btn-full{width:100%;}
+.btn-sm{padding:8px 14px;font-size:12px;border-radius:10px;}
 
 /* CARDS */
-.card { background:var(--white); border-radius:16px; padding:18px; margin-bottom:12px; box-shadow:var(--shadow); }
-.card-row { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--border); }
-.card-row:last-child { border:none; }
-.card-label { font-size:14px; color:var(--text2); }
-.card-value { font-size:14px; font-weight:500; }
+.card{background:var(--white);border-radius:16px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow);}
+.card-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);}
+.card-row:last-child{border:none;}
+.card-label{font-size:14px;color:var(--text2);}
+.card-value{font-size:14px;font-weight:600;}
 
 /* JOB CARDS */
-.job-card { background:var(--white); border-radius:16px; padding:18px; margin-bottom:12px; box-shadow:var(--shadow); cursor:pointer; transition:all .15s; position:relative; overflow:hidden; animation:fadeUp .25s ease both; }
-.job-card:active { transform:scale(.99); }
-@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-.job-top { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
-.biz-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
-.job-info { flex:1; min-width:0; }
-.job-title { font-size:15px; font-weight:700; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.job-biz { font-size:13px; color:var(--text3); }
-.job-wage { text-align:right; flex-shrink:0; }
-.wage-num { font-size:18px; font-weight:700; color:var(--text); }
-.wage-unit { font-size:11px; color:var(--text3); }
-.job-meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
-.meta-chip { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--text2); background:var(--bg); border-radius:8px; padding:4px 10px; font-weight:500; }
-.badge-new { display:inline-flex; align-items:center; background:var(--yellow); color:var(--text); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:10px; }
-.badge-fire { display:inline-flex; align-items:center; background:var(--red); color:white; font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:10px; animation:fireAnim 1s ease-in-out infinite; }
-@keyframes fireAnim { 0%,100%{transform:scale(1)}50%{transform:scale(1.08)} }
-.badge-status { display:inline-flex; align-items:center; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700; }
-.badge-open { background:#E8FBF1; color:var(--green); }
-.badge-closed { background:#FEE8E8; color:var(--red); }
-.badge-pending { background:#FFF9C4; color:#B8860B; }
-.badge-accepted { background:#E8FBF1; color:var(--green); }
-.badge-rejected { background:#F5F5F5; color:var(--text3); }
-.badge-cancelled { background:#F5F5F5; color:var(--text3); }
+.job-card{background:var(--white);border-radius:16px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s;position:relative;overflow:hidden;animation:fadeUp .25s ease both;}
+.job-card:active{transform:scale(.99);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.job-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.biz-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.job-info{flex:1;min-width:0;}
+.job-title{font-size:15px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.job-biz{font-size:12px;color:var(--text3);}
+.job-wage{text-align:right;flex-shrink:0;}
+.wage-num{font-size:18px;font-weight:900;color:var(--red);}
+.wage-unit{font-size:11px;color:var(--text3);}
+.job-meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.meta-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);background:var(--bg);border-radius:8px;padding:4px 10px;font-weight:500;}
+.badge-new{display:inline-flex;align-items:center;background:var(--yellow);color:var(--navy);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-bottom:8px;}
+.badge-fire{display:inline-flex;align-items:center;background:var(--red);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-bottom:8px;animation:fireAnim 1s ease-in-out infinite;}
+@keyframes fireAnim{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.badge-status{display:inline-flex;align-items:center;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;}
+.badge-open{background:#E8FBF1;color:var(--green);}
+.badge-closed{background:#FEE8E8;color:var(--red);}
+.badge-pending{background:#FFF8E8;color:var(--yellow);}
+.badge-accepted{background:#E8FBF1;color:var(--green);}
+.badge-rejected{background:#F5F5F5;color:var(--text3);}
+.badge-cancelled{background:#F5F5F5;color:var(--text3);}
 
-/* STATS */
-.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
-.stat-card { background:var(--white); border-radius:14px; padding:16px 12px; text-align:center; box-shadow:var(--shadow); }
-.stat-num { font-size:22px; font-weight:700; color:var(--text); }
-.stat-label { font-size:11px; color:var(--text3); margin-top:3px; }
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--white);border-radius:14px;padding:16px 12px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-size:22px;font-weight:900;color:var(--red);}
+.stat-label{font-size:11px;color:var(--text3);margin-top:3px;}
 
 /* FILTER */
-.filter-row { display:flex; gap:7px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px; }
-.filter-row::-webkit-scrollbar { display:none; }
-.fchip { padding:7px 15px; border-radius:20px; border:1.5px solid var(--border); font-size:13px; font-weight:500; color:var(--text2); background:var(--white); cursor:pointer; white-space:nowrap; transition:all .15s; font-family:inherit; }
-.fchip.active { background:var(--yellow); border-color:var(--yellow-dark); color:var(--text); font-weight:700; }
+.filter-row{display:flex;gap:7px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;}
+.filter-row::-webkit-scrollbar{display:none;}
+.fchip{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);font-size:13px;font-weight:500;color:var(--text2);background:var(--white);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit;}
+.fchip.active{background:var(--red);border-color:var(--red);color:white;font-weight:700;}
 
 /* ON/OFF */
-.on-off { display:flex; align-items:center; gap:8px; background:var(--bg); border:1.5px solid var(--border); border-radius:40px; padding:8px 16px; cursor:pointer; transition:all .2s; }
-.on-off.on { background:var(--yellow-bg); border-color:var(--yellow); }
-.knob { width:38px; height:22px; background:#DDD; border-radius:11px; position:relative; transition:background .2s; flex-shrink:0; }
-.on-off.on .knob { background:var(--yellow-dark); }
-.knob::after { content:''; position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:3px; left:3px; transition:left .2s; box-shadow:0 1px 4px rgba(0,0,0,.2); }
-.on-off.on .knob::after { left:19px; }
-.on-label { font-size:13px; font-weight:700; color:var(--text3); }
-.on-off.on .on-label { color:var(--text); }
+.on-off{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:40px;padding:8px 16px;cursor:pointer;transition:all .2s;}
+.on-off.on{background:var(--red-bg);border-color:var(--red);}
+.knob{width:38px;height:22px;background:#DDD;border-radius:11px;position:relative;transition:background .2s;flex-shrink:0;}
+.on-off.on .knob{background:var(--red);}
+.knob::after{content:'';position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.on-off.on .knob::after{left:19px;}
+.on-label{font-size:13px;font-weight:700;color:var(--text3);}
+.on-off.on .on-label{color:var(--red);}
 
 /* RADAR */
-.radar-wrap { display:none; flex-direction:column; align-items:center; padding:28px 0 20px; text-align:center; }
-.radar-wrap.show { display:flex; }
-.radar-ring-wrap { position:relative; width:130px; height:130px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
-.ring { position:absolute; border-radius:50%; border:2.5px solid var(--yellow); opacity:0; animation:ripple 2.4s ease-out infinite; }
+.radar-wrap{display:none;flex-direction:column;align-items:center;padding:28px 0 20px;text-align:center;}
+.radar-wrap.show{display:flex;}
+.radar-ring-wrap{position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.ring{position:absolute;border-radius:50%;border:2.5px solid var(--red);opacity:0;animation:ripple 2.4s ease-out infinite;}
 .ring:nth-child(1){width:38px;height:38px;animation-delay:0s;}
 .ring:nth-child(2){width:70px;height:70px;animation-delay:0.55s;}
 .ring:nth-child(3){width:100px;height:100px;animation-delay:1.1s;}
 .ring:nth-child(4){width:130px;height:130px;animation-delay:1.65s;}
 @keyframes ripple{0%{opacity:.75;transform:scale(.5)}100%{opacity:0;transform:scale(1)}}
-.radar-center { width:42px; height:42px; background:var(--yellow); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; z-index:1; animation:cpulse 1.6s ease-in-out infinite; }
-@keyframes cpulse{0%,100%{box-shadow:0 0 0 4px rgba(255,224,0,.25)}50%{box-shadow:0 0 0 12px rgba(255,224,0,.08)}}
-.radar-label { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
-.radar-sub { font-size:12px; color:var(--text3); }
+.radar-center{width:42px;height:42px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;z-index:1;animation:cpulse 1.6s ease-in-out infinite;}
+@keyframes cpulse{0%,100%{box-shadow:0 0 0 4px rgba(255,104,107,.25)}50%{box-shadow:0 0 0 12px rgba(255,104,107,.08)}}
+.radar-label{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.radar-sub{font-size:12px;color:var(--text3);}
 
 /* PROFILE */
-.profile-top { text-align:center; padding:24px 0 20px; }
-.profile-avatar { width:76px; height:76px; border-radius:24px; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-size:34px; margin:0 auto 14px; }
-.profile-name { font-size:22px; font-weight:700; }
-.profile-role { font-size:13px; color:var(--text3); margin-top:4px; }
+.profile-top{text-align:center;padding:24px 0 20px;}
+.profile-avatar{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,var(--red),var(--red-dark));display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 14px;box-shadow:0 4px 16px rgba(255,104,107,.3);}
+.profile-name{font-size:22px;font-weight:900;}
+.profile-role{font-size:13px;color:var(--text3);margin-top:4px;}
+.warning-badge{display:inline-flex;align-items:center;gap:4px;background:#FEE8E8;color:var(--red);font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;margin-top:8px;}
 
 /* APPLICANT */
-.app-card { background:var(--white); border-radius:14px; padding:16px; margin-bottom:10px; box-shadow:var(--shadow); }
-.app-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.app-avatar { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
-.app-name { font-size:15px; font-weight:700; }
-.app-meta { font-size:12px; color:var(--text3); margin-top:2px; }
-.app-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.contact-box { background:var(--yellow-bg); border:1.5px solid var(--yellow); border-radius:12px; padding:14px; margin-top:10px; }
-.contact-label { font-size:11px; font-weight:700; color:var(--text2); margin-bottom:6px; }
-.contact-num { font-size:20px; font-weight:700; color:var(--text); }
+.app-card{background:var(--white);border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:var(--shadow);}
+.app-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.app-avatar{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.app-name{font-size:15px;font-weight:700;}
+.app-meta{font-size:12px;color:var(--text3);margin-top:2px;}
+.app-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.contact-box{background:var(--red-bg);border:1.5px solid var(--red);border-radius:12px;padding:14px;margin-top:10px;}
+.contact-label{font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px;}
+.contact-num{font-size:20px;font-weight:900;color:var(--text);}
 
 /* MY JOB */
-.my-job-card { background:var(--white); border-radius:14px; padding:16px; margin-bottom:10px; box-shadow:var(--shadow); }
-.my-job-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
-.my-job-title { font-size:15px; font-weight:700; margin-bottom:4px; }
-.my-job-sub { font-size:12px; color:var(--text3); }
-.my-job-actions { display:flex; gap:7px; flex-wrap:wrap; }
+.my-job-card{background:var(--white);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:var(--shadow);}
+.my-job-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.my-job-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.my-job-sub{font-size:12px;color:var(--text3);}
+.my-job-actions{display:flex;gap:7px;flex-wrap:wrap;}
+
+/* DETAIL MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;}
+.modal-overlay.show{display:block;}
+.modal{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--white);border-radius:24px 24px 0 0;padding:28px 24px 40px;z-index:201;animation:slideUp .3s ease;max-height:85vh;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(100%)}to{transform:translateX(-50%) translateY(0)}}
+.modal-bar{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px;}
+.detail-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.detail-row:last-child{border:none;}
+.detail-label{color:var(--text3);}
+.detail-value{font-weight:600;}
+
+/* CHAT */
+.chat-screen{display:none;position:fixed;inset:0;background:var(--white);z-index:300;flex-direction:column;max-width:480px;margin:0 auto;}
+.chat-screen.show{display:flex;}
+.chat-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--white);}
+.chat-back{font-size:24px;cursor:pointer;color:var(--text);}
+.chat-name{font-size:16px;font-weight:700;flex:1;}
+.chat-messages{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px;background:var(--bg);}
+.msg-wrap{display:flex;align-items:flex-end;gap:8px;}
+.msg-wrap.mine{flex-direction:row-reverse;}
+.msg-bubble{max-width:70%;padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.5;}
+.msg-bubble.theirs{background:var(--white);color:var(--text);border-bottom-left-radius:4px;box-shadow:var(--shadow);}
+.msg-bubble.mine{background:var(--red);color:white;border-bottom-right-radius:4px;}
+.msg-time{font-size:10px;color:var(--text3);}
+.chat-input-area{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);background:var(--white);}
+.chat-inp{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:24px;padding:10px 16px;font-family:inherit;font-size:14px;outline:none;}
+.chat-inp:focus{border-color:var(--red);}
+.chat-send{width:44px;height:44px;background:var(--red);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* PREF */
+.pref-section{background:var(--white);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.pref-title{font-size:15px;font-weight:700;margin-bottom:14px;}
+
+/* BAN */
+.ban-notice{background:#FEE8E8;border:1.5px solid var(--red);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;}
+.ban-title{font-size:16px;font-weight:700;color:var(--red);margin-bottom:6px;}
+.ban-sub{font-size:13px;color:var(--text2);}
 
 /* EMPTY / LOADING */
-.empty { text-align:center; padding:50px 20px; }
-.empty-icon { font-size:44px; margin-bottom:12px; }
-.empty-text { font-size:14px; color:var(--text3); line-height:1.7; }
-.loading { display:flex; align-items:center; justify-content:center; padding:40px; color:var(--text3); gap:10px; font-size:14px; }
-.spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--yellow-dark); border-radius:50%; animation:spin .7s linear infinite; }
-@keyframes spin { to{transform:rotate(360deg)} }
+.empty{text-align:center;padding:50px 20px;}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.empty-text{font-size:14px;color:var(--text3);line-height:1.7;}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text3);gap:10px;font-size:14px;}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* BOTTOM NAV */
-.bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:var(--white); border-top:1px solid var(--border); display:flex; padding:8px 0 20px; z-index:100; }
-.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:var(--text3); font-size:10px; font-weight:500; transition:color .15s; padding:4px 0; }
-.nav-item.active { color:var(--text); }
-.nav-icon { font-size:22px; }
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--white);border-top:1px solid var(--border);display:flex;padding:8px 0 20px;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:500;transition:color .15s;padding:4px 0;position:relative;}
+.nav-item.active{color:var(--red);}
+.nav-icon{font-size:22px;}
+.nav-badge{position:absolute;top:0;right:50%;transform:translateX(8px);background:var(--red);color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;min-width:16px;text-align:center;}
 
 /* TOAST */
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(31,42,68,.95);color:white;font-size:13px;font-weight:500;padding:10px 22px;border-radius:20px;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* 설치 안내 팝업 */
-.install-popup {
-  display:none;
-  position:fixed; bottom:0; left:0; right:0; z-index:9999;
-  background:var(--white); border-radius:24px 24px 0 0;
-  padding:28px 24px 40px;
-  box-shadow:0 -8px 40px rgba(0,0,0,0.15);
-  animation:slideUp .35s ease;
-}
-.install-popup.show { display:block; }
-@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-.install-popup-bar { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
-.install-popup-icon { font-size:48px; text-align:center; margin-bottom:12px; }
-.install-popup-title { font-size:18px; font-weight:900; text-align:center; margin-bottom:8px; letter-spacing:-.5px; }
-.install-popup-sub { font-size:14px; color:var(--text3); text-align:center; line-height:1.6; margin-bottom:24px; }
-.install-steps { background:var(--bg); border-radius:14px; padding:16px; margin-bottom:20px; }
-.install-step { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); }
-.install-step:last-child { border:none; }
-.step-num { width:24px; height:24px; background:var(--yellow); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
-.step-text { font-size:13px; font-weight:500; }
-.install-close { width:100%; padding:14px; background:var(--yellow); color:var(--text); border:none; border-radius:12px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; }
-.install-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:9998; }
-.install-overlay.show { display:block; }
-.toast { position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(25,25,25,.9); color:white; font-size:13px; font-weight:500; padding:10px 22px; border-radius:20px; opacity:0; transition:all .25s; z-index:999; white-space:nowrap; pointer-events:none; }
-.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-
-.divider { height:8px; background:var(--bg); margin:0 -18px 20px; }
+.divider{height:8px;background:var(--bg);margin:0 -18px 20px;}
+.sec-title{font-size:18px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px;}
+.sec-sub{font-size:13px;color:var(--text3);margin-bottom:18px;}
 </style>
 </head>
 <body>
 
 <!-- AUTH -->
 <div id="auth-screen" class="screen">
-  <div class="auth-logo-area">
-    <div class="auth-logo">바로가기<span class="auth-logo-dot"></span></div>
-    <div class="auth-sub">지금 필요한 사람, 지금 연결</div>
+  <div class="auth-hero">
+    <div class="auth-logo-big">바로<span>가기</span></div>
+    <div class="auth-tagline">지금 바로, 가까운 사람과 연결</div>
   </div>
-  <div class="auth-wrap">
+  <div class="auth-body">
     <div class="tab-row">
       <button class="tab-btn active" onclick="authTab('login')">로그인</button>
       <button class="tab-btn" onclick="authTab('signup')">회원가입</button>
@@ -276,13 +285,13 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
       <div class="role-row">
         <div class="role-card selected" id="rc-employer" onclick="selectRole('employer')">
           <div class="role-icon">🏪</div>
-          <div class="role-label">사업주</div>
-          <div class="role-sub">직원이 필요해요</div>
+          <div class="role-label">사장님</div>
+          <div class="role-sub">인력이 필요해요</div>
         </div>
         <div class="role-card" id="rc-worker" onclick="selectRole('worker')">
           <div class="role-icon">💼</div>
-          <div class="role-label">워커</div>
-          <div class="role-sub">일자리를 찾아요</div>
+          <div class="role-label">알바생</div>
+          <div class="role-sub">알바를 찾아요</div>
         </div>
       </div>
       <input class="inp" id="su-name" type="text" placeholder="이름 (실명)">
@@ -291,33 +300,59 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
     </div>
     <input class="inp" id="au-email" type="email" placeholder="이메일">
     <input class="inp" id="au-pw" type="password" placeholder="비밀번호 (6자 이상)">
-    <div id="remember-section" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <input type="checkbox" id="remember-me" style="width:18px;height:18px;accent-color:var(--yellow);cursor:pointer" checked>
-      <label for="remember-me" style="font-size:14px;color:var(--text2);cursor:pointer">로그인 상태 유지</label>
+    <div id="remember-section" class="remember-row">
+      <input type="checkbox" id="remember-me" checked>
+      <label for="remember-me">로그인 상태 유지</label>
     </div>
     <div class="err-msg" id="au-err"></div>
     <button class="auth-btn" id="au-btn" onclick="handleAuth()">로그인</button>
-    <div class="auth-msg" id="au-switch">계정이 없으신가요? <span onclick="authTab('signup')">회원가입</span></div>
+    <div class="auth-switch" id="au-switch">계정이 없으신가요? <span onclick="authTab('signup')">회원가입</span></div>
   </div>
 </div>
 
 <!-- EMPLOYER -->
 <div id="employer-screen" class="screen">
   <div class="header">
-    <div class="logo">바로가기<span class="logo-dot"></span></div>
+    <div class="logo">바로<span>가기</span></div>
     <div class="header-right">
-      <span class="user-name" id="emp-name"></span>
+      <span class="user-chip" id="emp-name"></span>
       <button class="logout-btn" onclick="logout()">로그아웃</button>
     </div>
   </div>
   <div class="emp-tab-row">
-    <button class="emp-tab active" onclick="empTab('post')">공고 올리기</button>
+    <button class="emp-tab active" onclick="empTab('dash')">대시보드</button>
+    <button class="emp-tab" onclick="empTab('post')">공고 등록</button>
     <button class="emp-tab" onclick="empTab('jobs')">내 공고</button>
     <button class="emp-tab" onclick="empTab('profile')">프로필</button>
   </div>
 
-  <div id="emp-post" class="content">
-    <div class="live-pill"><div class="live-dot"></div>지금 구직 중 워커 <span id="online-count">--</span>명</div>
+  <!-- 대시보드 -->
+  <div id="emp-dash" class="content">
+    <div class="dashboard-greeting">
+      <div class="greeting-sub">오늘도 좋은 하루 되세요,</div>
+      <div class="greeting-name" id="dash-name">사장님! 👋</div>
+      <div class="dash-stats">
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dash-total">0</div>
+          <div class="dash-stat-label">전체 공고</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dash-applicants">0</div>
+          <div class="dash-stat-label">지원자 수</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="dash-hired">0</div>
+          <div class="dash-stat-label">채용 확정</div>
+        </div>
+      </div>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>지금 구직 중 알바생 <span id="online-count">--</span>명</div>
+    <div class="sec-title" style="margin-bottom:14px">진행 중인 공고</div>
+    <div id="dash-jobs-list"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- 공고 등록 -->
+  <div id="emp-post" class="content" style="display:none">
     <div class="form-group">
       <label class="form-label">업종</label>
       <select class="inp inp-sel" id="j-cat">
@@ -366,9 +401,10 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
         <option value="3">3명</option>
       </select>
     </div>
-    <button class="btn btn-yellow btn-full" id="post-btn" onclick="postJob()" style="font-size:16px;padding:16px">공고 올리기</button>
+    <button class="btn btn-red btn-full" id="post-btn" onclick="postJob()" style="font-size:16px;padding:16px">공고 등록하기</button>
   </div>
 
+  <!-- 내 공고 -->
   <div id="emp-jobs" class="content" style="display:none">
     <div class="sec-title">내 공고</div>
     <div class="sec-sub">공고를 눌러 지원자를 확인하세요</div>
@@ -380,11 +416,12 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
     </div>
   </div>
 
+  <!-- 사업주 프로필 -->
   <div id="emp-profile" class="content" style="display:none">
     <div class="profile-top">
       <div class="profile-avatar">🏪</div>
       <div class="profile-name" id="ep-name-display"></div>
-      <div class="profile-role">사업주</div>
+      <div class="profile-role">사장님</div>
     </div>
     <div class="card">
       <div class="card-row"><span class="card-label">이메일</span><span class="card-value" id="ep-email"></span></div>
@@ -393,28 +430,33 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
       <div class="card-row" style="border:none"><span class="card-label">가입일</span><span class="card-value" id="ep-date"></span></div>
     </div>
     <div class="form-group" style="margin-top:8px">
-      <label class="form-label">매장명 / 닉네임 수정</label>
+      <label class="form-label">매장명 / 닉네임</label>
       <input class="inp" id="ep-nickname-edit" type="text" placeholder="매장명 또는 닉네임">
     </div>
     <div class="form-group">
-      <label class="form-label">전화번호 수정</label>
+      <label class="form-label">전화번호</label>
       <input class="inp" id="ep-phone-edit" type="tel" placeholder="010-0000-0000">
     </div>
-    <button class="btn btn-yellow btn-full" onclick="updateProfile('employer')">저장하기</button>
+    <button class="btn btn-red btn-full" onclick="updateProfile('employer')">저장하기</button>
   </div>
 </div>
 
 <!-- WORKER -->
 <div id="worker-screen" class="screen">
   <div class="header">
-    <div class="logo">바로가기<span class="logo-dot"></span></div>
+    <div class="logo">바로<span>가기</span></div>
     <div class="header-right">
-      <span class="user-name" id="wk-name"></span>
+      <span class="user-chip" id="wk-name"></span>
       <button class="logout-btn" onclick="logout()">로그아웃</button>
     </div>
   </div>
 
+  <!-- 홈 -->
   <div id="wk-home" class="content">
+    <div id="ban-notice" style="display:none" class="ban-notice">
+      <div class="ban-title">⛔ 이용이 제한됐어요</div>
+      <div class="ban-sub" id="ban-sub-text">노쇼 3회 누적으로 7일간 이용이 제한됩니다</div>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div>
         <div class="sec-title">오늘의 일자리</div>
@@ -425,19 +467,15 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
         <div class="on-label">구직중</div>
       </div>
     </div>
-
     <div class="radar-wrap" id="radar-wrap">
       <div class="radar-ring-wrap">
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
+        <div class="ring"></div><div class="ring"></div>
+        <div class="ring"></div><div class="ring"></div>
         <div class="radar-center">🔍</div>
       </div>
       <div class="radar-label">알바 찾는 중...</div>
       <div class="radar-sub">주변 공고를 불러오고 있어요</div>
     </div>
-
     <div class="stats-row">
       <div class="stat-card"><div class="stat-num" id="st-count">0</div><div class="stat-label">이번달 근무</div></div>
       <div class="stat-card"><div class="stat-num" id="st-rating">-</div><div class="stat-label">평균 평점</div></div>
@@ -453,6 +491,7 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
     <div id="job-feed"></div>
   </div>
 
+  <!-- 내 지원 -->
   <div id="wk-applies" class="content" style="display:none">
     <div class="sec-title">내 지원 현황</div>
     <div class="filter-row" style="margin-top:10px">
@@ -465,46 +504,53 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
     <div id="my-applies-list"></div>
   </div>
 
+  <!-- 채팅 목록 -->
+  <div id="wk-chat" class="content" style="display:none">
+    <div class="sec-title">메시지</div>
+    <div id="chat-list"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- 조건설정 -->
   <div id="wk-pref" class="content" style="display:none">
     <div class="sec-title">지원 조건 설정</div>
     <div class="sec-sub">내가 원하는 조건의 공고만 보여드려요</div>
-    <div class="card">
-      <div class="form-group">
-        <label class="form-label">선호 업종</label>
-        <div class="tag-wrap" id="pref-cats">
-          <div class="tag" data-v="외식" onclick="togglePrefTag(this)">🍜 외식</div>
-          <div class="tag" data-v="카페" onclick="togglePrefTag(this)">☕ 카페</div>
-          <div class="tag" data-v="편의점" onclick="togglePrefTag(this)">🏪 편의점</div>
-          <div class="tag" data-v="물류" onclick="togglePrefTag(this)">📦 물류</div>
-          <div class="tag" data-v="청소" onclick="togglePrefTag(this)">🧹 청소</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">선호 시간대</label>
-        <div class="two-col">
-          <div><label class="form-label" style="font-size:11px">시작</label><input class="inp" id="pref-start" type="time" value="09:00"></div>
-          <div><label class="form-label" style="font-size:11px">종료</label><input class="inp" id="pref-end" type="time" value="22:00"></div>
-        </div>
-      </div>
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">최대 거리</label>
-        <select class="inp inp-sel" id="pref-dist">
-          <option value="1">1km 이내</option>
-          <option value="3" selected>3km 이내</option>
-          <option value="5">5km 이내</option>
-          <option value="10">10km 이내</option>
-          <option value="99">거리 무관</option>
-        </select>
+    <div class="pref-section">
+      <div class="pref-title">선호 업종</div>
+      <div class="tag-wrap" id="pref-cats">
+        <div class="tag" data-v="외식" onclick="togglePrefTag(this)">🍜 외식</div>
+        <div class="tag" data-v="카페" onclick="togglePrefTag(this)">☕ 카페</div>
+        <div class="tag" data-v="편의점" onclick="togglePrefTag(this)">🏪 편의점</div>
+        <div class="tag" data-v="물류" onclick="togglePrefTag(this)">📦 물류</div>
+        <div class="tag" data-v="청소" onclick="togglePrefTag(this)">🧹 청소</div>
       </div>
     </div>
-    <button class="btn btn-yellow btn-full" onclick="savePref()">조건 저장하기</button>
+    <div class="pref-section">
+      <div class="pref-title">선호 시간대</div>
+      <div class="two-col">
+        <div><label class="form-label" style="font-size:11px">시작</label><input class="inp" id="pref-start" type="time" value="09:00"></div>
+        <div><label class="form-label" style="font-size:11px">종료</label><input class="inp" id="pref-end" type="time" value="22:00"></div>
+      </div>
+    </div>
+    <div class="pref-section">
+      <div class="pref-title">최대 거리</div>
+      <select class="inp inp-sel" id="pref-dist">
+        <option value="1">1km 이내</option>
+        <option value="3" selected>3km 이내</option>
+        <option value="5">5km 이내</option>
+        <option value="10">10km 이내</option>
+        <option value="99">거리 무관</option>
+      </select>
+    </div>
+    <button class="btn btn-red btn-full" onclick="savePref()">조건 저장하기</button>
   </div>
 
+  <!-- 프로필 -->
   <div id="wk-profile" class="content" style="display:none">
     <div class="profile-top">
       <div class="profile-avatar">💼</div>
       <div class="profile-name" id="wp-name-display"></div>
-      <div class="profile-role">워커</div>
+      <div class="profile-role">알바생</div>
+      <div id="wp-warning" style="display:none" class="warning-badge">⚠️ 경고 <span id="wp-warning-count">0</span>회</div>
     </div>
     <div class="card">
       <div class="card-row"><span class="card-label">이메일</span><span class="card-value" id="wp-email"></span></div>
@@ -513,176 +559,225 @@ body { font-family: Pretendard, 'Noto Sans KR', sans-serif; background:var(--bg)
       <div class="card-row" style="border:none"><span class="card-label">가입일</span><span class="card-value" id="wp-date"></span></div>
     </div>
     <div class="form-group" style="margin-top:8px">
-      <label class="form-label">닉네임 수정</label>
+      <label class="form-label">닉네임</label>
       <input class="inp" id="wp-nickname-edit" type="text" placeholder="닉네임">
     </div>
     <div class="form-group">
       <label class="form-label">한마디 <span style="color:var(--text3);font-weight:400">(300자 이내)</span></label>
-      <textarea class="inp" id="wp-bio" rows="4" maxlength="300" placeholder="예: 서빙 경험 2년, 포스기 사용 가능해요. 성실하게 일합니다!" style="resize:none"></textarea>
+      <textarea class="inp" id="wp-bio" rows="4" maxlength="300" placeholder="예: 서빙 경험 2년, 포스기 사용 가능해요!" style="resize:none"></textarea>
       <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:4px"><span id="bio-count">0</span>/300</div>
     </div>
     <div class="form-group">
-      <label class="form-label">전화번호 수정</label>
+      <label class="form-label">전화번호</label>
       <input class="inp" id="wp-phone-edit" type="tel" placeholder="010-0000-0000">
     </div>
-    <button class="btn btn-yellow btn-full" onclick="updateProfile('worker')">저장하기</button>
+    <button class="btn btn-red btn-full" onclick="updateProfile('worker')">저장하기</button>
   </div>
 
   <div class="bottom-nav" id="worker-nav">
     <div class="nav-item active" onclick="workerNav('home',this)"><div class="nav-icon">🏠</div><div>홈</div></div>
     <div class="nav-item" onclick="workerNav('applies',this)"><div class="nav-icon">📋</div><div>내 지원</div></div>
+    <div class="nav-item" onclick="workerNav('chat',this)"><div class="nav-icon">💬</div><div>메시지</div><div class="nav-badge" id="chat-badge" style="display:none">0</div></div>
     <div class="nav-item" onclick="workerNav('pref',this)"><div class="nav-icon">⚙️</div><div>조건설정</div></div>
     <div class="nav-item" onclick="workerNav('profile',this)"><div class="nav-icon">👤</div><div>프로필</div></div>
   </div>
 </div>
 
+<!-- 공고 상세 모달 -->
+<div class="modal-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="modal" id="detail-modal" style="display:none">
+  <div class="modal-bar"></div>
+  <div class="modal-title" id="detail-title"></div>
+  <div id="detail-content"></div>
+  <div style="margin-top:20px;display:flex;gap:10px">
+    <button class="btn btn-red btn-full" id="detail-apply-btn" style="font-size:15px;padding:14px"></button>
+  </div>
+</div>
 
-<!-- 설치 안내 오버레이 -->
-<div class="install-overlay" id="install-overlay" onclick="closeInstall()"></div>
-
-<!-- 설치 안내 팝업 -->
-<div class="install-popup" id="install-popup">
-  <div class="install-popup-bar"></div>
-  <div class="install-popup-icon">📱</div>
-  <div class="install-popup-title">바로가기 앱 설치하기</div>
-  <div class="install-popup-sub">홈화면에 추가하면 앱처럼<br>편리하게 사용할 수 있어요!</div>
-  <div class="install-steps" id="install-steps"></div>
-  <button class="install-close" onclick="closeInstall()">확인했어요!</button>
+<!-- 채팅 화면 -->
+<div class="chat-screen" id="chat-screen">
+  <div class="chat-header">
+    <div class="chat-back" onclick="closeChat()">←</div>
+    <div class="chat-name" id="chat-partner-name"></div>
+    <div style="font-size:12px;color:var(--text3)" id="chat-job-info"></div>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-area">
+    <input class="chat-inp" id="chat-input" placeholder="메시지를 입력하세요..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <button class="chat-send" onclick="sendMessage()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M2 9L16 2L9 16L8 10L2 9Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const { createClient } = supabase;
+const {createClient} = supabase;
 const sb = createClient(
   'https://dgpyalfnrydznvnemasw.supabase.co',
   'sb_publishable_Nrq3d8R5OodurWyLqk_oqg_0QOvFuJQ'
 );
 
-let currentUser = null;
-let currentProfile = null;
+let currentUser = null, currentProfile = null;
+let currentChatAppId = null, chatSubscription = null;
 
 function maskName(name) {
   if(!name||name.length<2) return name||'';
   if(name.length===2) return name[0]+'*';
-  return name[0] + '*'.repeat(name.length-2) + name[name.length-1];
+  return name[0]+'*'.repeat(name.length-2)+name[name.length-1];
 }
 
-let allJobs = [];
-let allApplies = [];
-
+// INIT
 window.addEventListener('load', async () => {
   document.getElementById('j-date').value = new Date().toISOString().split('T')[0];
-  // 자동로그인: 저장된 세션 확인
-  const { data: { session: savedSession } } = await sb.auth.getSession();
-  if (savedSession && !currentUser) {
-    currentUser = savedSession.user;
-    await loadProfile();
-  }
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (session) {
-      currentUser = session.user;
-      await loadProfile();
-    } else {
-      currentUser = null;
-      currentProfile = null;
-      showScreen('auth-screen');
-    }
+  const {data:{session}} = await sb.auth.getSession();
+  if(session) { currentUser=session.user; await loadProfile(); }
+  else showScreen('auth-screen');
+  sb.auth.onAuthStateChange(async (event,session) => {
+    if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;showScreen('auth-screen');}
   });
+  // bio 카운터
+  const bioEl = document.getElementById('wp-bio');
+  if(bioEl) bioEl.addEventListener('input',()=>document.getElementById('bio-count').textContent=bioEl.value.length);
 });
 
-let authMode = 'login';
-let selectedRole = 'employer';
-
+// AUTH
+let authMode='login', selectedRole='employer';
 function authTab(mode) {
-  authMode = mode;
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',(mode==='login'&&i===0)||(mode==='signup'&&i===1)));
-  document.getElementById('role-section').style.display = mode==='signup'?'block':'none';
-  document.getElementById('remember-section').style.display = mode==='login'?'flex':'none';
-  document.getElementById('au-btn').textContent = mode==='login'?'로그인':'회원가입';
-  document.getElementById('au-switch').innerHTML = mode==='login'
-    ? '계정이 없으신가요? <span onclick="authTab(\'signup\')">회원가입</span>'
-    : '이미 계정이 있으신가요? <span onclick="authTab(\'login\')">로그인</span>';
+  authMode=mode;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(mode==='login'&&i===0)||(mode==='signup'&&i===1)));
+  document.getElementById('role-section').style.display=mode==='signup'?'block':'none';
+  document.getElementById('remember-section').style.display=mode==='login'?'flex':'none';
+  document.getElementById('au-btn').textContent=mode==='login'?'로그인':'회원가입';
+  document.getElementById('au-switch').innerHTML=mode==='login'
+    ?'계정이 없으신가요? <span onclick="authTab(\'signup\')">회원가입</span>'
+    :'이미 계정이 있으신가요? <span onclick="authTab(\'login\')">로그인</span>';
   document.getElementById('au-err').textContent='';
 }
-
 function selectRole(r) {
   selectedRole=r;
   document.getElementById('rc-employer').classList.toggle('selected',r==='employer');
   document.getElementById('rc-worker').classList.toggle('selected',r==='worker');
 }
-
 async function handleAuth() {
-  const email = document.getElementById('au-email').value.trim();
-  const pw = document.getElementById('au-pw').value;
-  const errEl = document.getElementById('au-err');
-  const btn = document.getElementById('au-btn');
+  const email=document.getElementById('au-email').value.trim();
+  const pw=document.getElementById('au-pw').value;
+  const errEl=document.getElementById('au-err');
+  const btn=document.getElementById('au-btn');
   if(!email||!pw){errEl.textContent='이메일과 비밀번호를 입력해주세요';return;}
-  btn.disabled=true; btn.textContent='처리 중...';
+  btn.disabled=true;btn.textContent='처리 중...';
   if(authMode==='login') {
-    const {data,error} = await sb.auth.signInWithPassword({email,password:pw});
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
     if(error){errEl.textContent='이메일 또는 비밀번호를 확인해주세요';btn.disabled=false;btn.textContent='로그인';return;}
-    currentUser=data.user;
-    await loadProfile();
+    currentUser=data.user; await loadProfile();
   } else {
-    const name = document.getElementById('su-name').value.trim();
-    const phone = document.getElementById('su-phone').value.trim();
+    const name=document.getElementById('su-name').value.trim();
+    const nickname=document.getElementById('su-nickname').value.trim()||name;
+    const phone=document.getElementById('su-phone').value.trim();
     if(!name){errEl.textContent='이름을 입력해주세요';btn.disabled=false;btn.textContent='회원가입';return;}
-    const {data,error} = await sb.auth.signUp({email,password:pw});
+    const {data,error}=await sb.auth.signUp({email,password:pw});
     if(error){errEl.textContent=error.message;btn.disabled=false;btn.textContent='회원가입';return;}
     currentUser=data.user;
-    const {error:pe} = await sb.from('profiles').upsert({id:currentUser.id,name,phone,role:selectedRole,is_online:true});
-    if(pe){errEl.textContent='프로필 저장에 실패했어요: '+pe.message;btn.disabled=false;btn.textContent='회원가입';return;}
+    const {error:pe}=await sb.from('profiles').upsert({id:currentUser.id,name,nickname,phone,role:selectedRole,is_online:true,warning_count:0,is_banned:false});
+    if(pe){errEl.textContent='프로필 저장 실패';btn.disabled=false;btn.textContent='회원가입';return;}
     await loadProfile();
   }
   btn.disabled=false;
 }
-
 async function loadProfile() {
   if(!currentUser) return;
-  const {data:rows} = await sb.from('profiles').select('*').eq('id',currentUser.id);
-  const data = rows&&rows.length>0?rows[0]:null;
-  if(!data) {
-    const btn = document.getElementById('au-btn');
+  const {data:rows}=await sb.from('profiles').select('*').eq('id',currentUser.id);
+  const data=rows&&rows.length>0?rows[0]:null;
+  if(!data){
+    const btn=document.getElementById('au-btn');
     if(btn){btn.disabled=false;btn.textContent=authMode==='login'?'로그인':'회원가입';}
     document.getElementById('au-err').textContent='프로필이 없어요. 회원가입을 해주세요!';
-    await sb.auth.signOut();
-    showScreen('auth-screen');
-    return;
+    await sb.auth.signOut();showScreen('auth-screen');return;
   }
   currentProfile=data;
   if(data.role==='employer') {
     document.getElementById('emp-name').textContent=data.nickname||data.name;
+    document.getElementById('dash-name').textContent=(data.nickname||data.name)+'님! 👋';
     showScreen('employer-screen');
-    loadOnlineCount();
-    loadMyJobs();
-    fillEmpProfile();
+    loadDashboard(); loadOnlineCount(); fillEmpProfile();
   } else {
     document.getElementById('wk-name').textContent=data.nickname||data.name;
     showScreen('worker-screen');
-    loadJobs('전체');
-    loadWorkerStats();
-    fillWkProfile();
-    loadPrefSettings();
+    checkBanStatus(); loadJobs('전체'); loadWorkerStats(); fillWkProfile(); loadPrefSettings(); loadUnreadCount();
   }
 }
-
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
+async function logout(){await sb.auth.signOut();}
 
-async function logout() { await sb.auth.signOut(); }
-
-function empTab(tab) {
-  document.querySelectorAll('.emp-tab').forEach((b,i)=>b.classList.toggle('active',['post','jobs','profile'][i]===tab));
-  document.getElementById('emp-post').style.display=tab==='post'?'block':'none';
-  document.getElementById('emp-jobs').style.display=tab==='jobs'?'block':'none';
-  document.getElementById('emp-profile').style.display=tab==='profile'?'block':'none';
-  if(tab==='jobs') loadMyJobs();
+// BAN
+function checkBanStatus() {
+  if(!currentProfile)return;
+  const ban=document.getElementById('ban-notice');
+  if(currentProfile.is_banned){
+    const until=currentProfile.ban_until?new Date(currentProfile.ban_until).toLocaleDateString('ko-KR'):'';
+    document.getElementById('ban-sub-text').textContent=`노쇼 ${currentProfile.warning_count}회 누적으로 ${until}까지 이용이 제한됩니다`;
+    ban.style.display='block';
+    const onoff=document.getElementById('onoff');
+    onoff.style.pointerEvents='none';onoff.style.opacity='.5';
+  } else ban.style.display='none';
 }
 
+// EMPLOYER
+function empTab(tab) {
+  document.querySelectorAll('.emp-tab').forEach((b,i)=>b.classList.toggle('active',['dash','post','jobs','profile'][i]===tab));
+  ['dash','post','jobs','profile'].forEach(t=>{
+    const el=document.getElementById('emp-'+t);
+    if(el)el.style.display=t===tab?'block':'none';
+  });
+  if(tab==='jobs')loadMyJobs();
+}
 function toggleTag(el){el.classList.toggle('selected');}
+function togglePrefTag(el){el.classList.toggle('selected');}
+
+// DASHBOARD
+async function loadDashboard() {
+  const el=document.getElementById('dash-jobs-list');
+  const [jobs,apps,hired]=await Promise.all([
+    sb.from('jobs').select('*',{count:'exact',head:true}).eq('employer_id',currentUser.id),
+    sb.from('applications').select('*',{count:'exact',head:true}).eq('job_id',currentUser.id),
+    sb.from('applications').select('applications.id',{count:'exact',head:true}).eq('status','accepted')
+  ]);
+  // 실제 집계
+  const {data:myJobs}=await sb.from('jobs').select('id').eq('employer_id',currentUser.id);
+  const jobIds=myJobs?.map(j=>j.id)||[];
+  let totalApps=0,totalHired=0;
+  if(jobIds.length>0){
+    const {count:ac}=await sb.from('applications').select('*',{count:'exact',head:true}).in('job_id',jobIds);
+    const {count:hc}=await sb.from('applications').select('*',{count:'exact',head:true}).in('job_id',jobIds).eq('status','accepted');
+    totalApps=ac||0;totalHired=hc||0;
+  }
+  document.getElementById('dash-total').textContent=myJobs?.length||0;
+  document.getElementById('dash-applicants').textContent=totalApps;
+  document.getElementById('dash-hired').textContent=totalHired;
+  // 진행중 공고
+  const {data:openJobs}=await sb.from('jobs').select('*').eq('employer_id',currentUser.id).eq('status','open').order('created_at',{ascending:false}).limit(3);
+  if(!openJobs||!openJobs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">진행 중인 공고가 없어요<br>공고 등록 탭에서 올려보세요!</div></div>';return;}
+  const today=new Date().toISOString().split('T')[0];
+  el.innerHTML=openJobs.map(j=>`
+    <div class="my-job-card">
+      <div class="my-job-top">
+        <div>
+          <div class="my-job-title">${j.date===today?'🔥 ':''} ${j.description.slice(0,22)}</div>
+          <div class="my-job-sub">${j.date} · ${j.start_time}~${j.end_time} · ${(j.wage||0).toLocaleString()}원/h</div>
+        </div>
+        <span class="badge-status badge-open">모집중</span>
+      </div>
+      <div class="my-job-actions">
+        <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1.5px solid var(--red)" onclick="empTab('jobs');setTimeout(()=>loadApplicants('${j.id}','${j.description.slice(0,12)}'),100)">지원자 보기</button>
+      </div>
+    </div>`).join('');
+}
 
 async function postJob() {
   const btn=document.getElementById('post-btn');
@@ -695,164 +790,150 @@ async function postJob() {
   const head=parseInt(document.getElementById('j-head').value);
   const skills=[...document.querySelectorAll('#j-skills .tag.selected')].map(t=>t.dataset.v);
   if(!desc||!date){showToast('내용과 날짜를 입력해주세요!');return;}
-  btn.disabled=true;btn.textContent='올리는 중...';
+  btn.disabled=true;btn.textContent='등록 중...';
   const {error}=await sb.from('jobs').insert({
-    employer_id:currentUser.id,employer_name:currentProfile.name,
+    employer_id:currentUser.id,employer_name:currentProfile.nickname||currentProfile.name,
     employer_phone:currentProfile.phone||'',
     category:cat,description:desc,date,start_time:start,end_time:end,
     wage,headcount:head,skills,status:'open'
   });
-  btn.disabled=false;btn.textContent='공고 올리기';
-  if(error){showToast('오류가 발생했어요: '+error.message);return;}
-  showToast('공고를 올렸어요!');
+  btn.disabled=false;btn.textContent='공고 등록하기';
+  if(error){showToast('오류가 발생했어요');return;}
+  showToast('공고를 등록했어요!');
   document.getElementById('j-desc').value='';
+  loadDashboard();
 }
 
 async function loadMyJobs() {
   const el=document.getElementById('my-jobs-list');
   el.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const {data:jobs}=await sb.from('jobs').select('*').eq('employer_id',currentUser.id).order('created_at',{ascending:false});
-  if(!jobs||jobs.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">아직 올린 공고가 없어요<br>공고 올리기 탭에서 올려보세요!</div></div>';return;}
+  if(!jobs||!jobs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">아직 올린 공고가 없어요</div></div>';return;}
+  const today=new Date().toISOString().split('T')[0];
   el.innerHTML=jobs.map(j=>`
     <div class="my-job-card">
       <div class="my-job-top">
         <div>
-          <div class="my-job-title">${j.description.slice(0,22)}</div>
+          <div class="my-job-title">${j.date===today?'🔥 ':''} ${j.description.slice(0,22)}</div>
           <div class="my-job-sub">${j.date} · ${j.start_time}~${j.end_time} · ${(j.wage||0).toLocaleString()}원/h</div>
         </div>
         <span class="badge-status ${j.status==='open'?'badge-open':'badge-closed'}">${j.status==='open'?'모집중':'마감'}</span>
       </div>
       <div class="my-job-actions">
-        <button class="btn btn-sm" style="background:var(--yellow-bg);color:var(--text);border:1.5px solid var(--yellow)" onclick="loadApplicants('${j.id}','${j.description.slice(0,12)}')">지원자 보기</button>
-        ${j.status==='open'?`<button class="btn btn-white btn-sm" onclick="closeJob('${j.id}')">마감하기</button>`:''}
+        <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1.5px solid var(--red)" onclick="loadApplicants('${j.id}','${j.description.slice(0,12)}')">지원자 보기</button>
+        ${j.status==='open'?`<button class="btn btn-white btn-sm" onclick="closeJob('${j.id}')">마감</button>`:''}
         <button class="btn btn-sm" style="color:var(--red);background:transparent;border:1.5px solid #FFD0D0" onclick="deleteJob('${j.id}')">삭제</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-async function closeJob(jobId) {
-  await sb.from('jobs').update({status:'closed'}).eq('id',jobId);
-  showToast('공고를 마감했어요');
-  loadMyJobs();
+async function closeJob(id){await sb.from('jobs').update({status:'closed'}).eq('id',id);showToast('공고를 마감했어요');loadMyJobs();}
+async function deleteJob(id){
+  if(!confirm('정말 삭제할까요?'))return;
+  await sb.from('applications').delete().eq('job_id',id);
+  await sb.from('jobs').delete().eq('id',id);
+  showToast('삭제했어요');loadMyJobs();loadDashboard();
 }
 
-async function deleteJob(jobId) {
-  if(!confirm('정말 삭제할까요?')) return;
-  await sb.from('applications').delete().eq('job_id',jobId);
-  await sb.from('jobs').delete().eq('id',jobId);
-  showToast('삭제했어요');
-  loadMyJobs();
-}
-
-async function loadApplicants(jobId, title) {
+async function loadApplicants(jobId,title) {
   document.getElementById('applicant-section').style.display='block';
   document.getElementById('app-section-title').textContent=`"${title}" 지원자`;
   const el=document.getElementById('applicant-list');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const {data}=await sb.from('applications').select('*, profiles(name,phone)').eq('job_id',jobId);
-  if(!data||data.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">아직 지원자가 없어요</div></div>';return;}
+  const {data}=await sb.from('applications').select('*,profiles(name,phone,warning_count,nickname)').eq('job_id',jobId).neq('status','cancelled');
+  if(!data||!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">아직 지원자가 없어요</div></div>';return;}
   const avgs=['👩','👨','👩','👨','👩'];
-  const colors=['#FFF9C4','#E8F5E9','#E3F2FD','#FDE8FF','#FFE8E8'];
-  el.innerHTML=data.map((app,i)=>`
+  const colors=['#FFE8E8','#E8F5E9','#E3F2FD','#FDE8FF','#FFF8E8'];
+  el.innerHTML=data.map((app,i)=>{
+    const w=app.profiles;
+    const warnings=w?.warning_count||0;
+    const displayName=app.status==='accepted'?(w?.name||'워커'):maskName(w?.name)||'워커';
+    return `
     <div class="app-card">
       <div class="app-top">
         <div class="app-avatar" style="background:${colors[i%5]}">${avgs[i%5]}</div>
         <div style="flex:1">
-          <div class="app-name">${(app.status==='accepted'?(app.profiles?.name||'워커'):maskName(app.profiles?.name)||'워커')}</div>
-          <div class="app-meta">${app.status==='pending'?'검토중':app.status==='accepted'?'수락됨':'패스'}</div>
+          <div class="app-name">${displayName}${warnings>0?` <span style="color:var(--red);font-size:11px">⚠️${warnings}회</span>`:''}</div>
+          <div class="app-meta">${app.status==='pending'?'검토중':app.status==='accepted'?'채용 확정':'패스'}</div>
         </div>
-        <span class="badge-status badge-${app.status}">${app.status==='pending'?'검토중':app.status==='accepted'?'수락됨':'패스'}</span>
+        <span class="badge-status badge-${app.status}">${app.status==='pending'?'검토중':app.status==='accepted'?'확정':'패스'}</span>
       </div>
       ${app.status==='accepted'?`
         <div class="contact-box">
           <div class="contact-label">📞 연락처</div>
-          <div class="contact-num">${app.profiles?.phone||'번호 미등록'}</div>
+          <div class="contact-num">${w?.phone||'번호 미등록'}</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-          ${getAttendanceUI(app, jobId)}
+          <button class="btn btn-navy btn-sm" onclick="openChatAsEmployer('${app.id}','${displayName}','${jobId}')">💬 채팅하기</button>
+          ${getAttendanceUI(app,jobId)}
         </div>
       `:app.status==='pending'?`
         <div class="app-actions">
-          <button class="btn btn-green btn-sm" onclick="acceptApp('${app.id}','${jobId}')">수락</button>
+          <button class="btn btn-green btn-sm" onclick="acceptApp('${app.id}','${jobId}')">✓ 채용 확정</button>
           <button class="btn btn-white btn-sm" onclick="passApp('${app.id}','${jobId}')">패스</button>
         </div>
       `:''}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-function getAttendanceUI(app, jobId) {
+function getAttendanceUI(app,jobId) {
   if(!app.attendance_checked) {
-    const wName = app.profiles?.name || '워커';
     return `<button class="btn btn-green btn-sm" onclick="confirmAttendance('${app.id}','${jobId}')">✓ 출근 확인</button>
-            <button class="btn btn-sm" style="background:var(--red);color:white;padding:8px 14px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer" onclick="reportNoShow('${app.id}','${wName}','${jobId}')">노쇼 신고</button>`;
+            <button class="btn btn-sm" style="background:var(--red);color:white;padding:8px 14px;border-radius:10px;border:none;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer" onclick="reportNoShow('${app.id}','${app.profiles?.name||'워커'}','${jobId}')">노쇼 신고</button>`;
   } else if(app.no_show) {
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px">
-      <span style="color:var(--red);font-size:13px;font-weight:600">✕ 노쇼 처리됨</span>
-      <button class="btn btn-white btn-sm" onclick="cancelNoShow('${app.id}','${app.worker_id}','${jobId}')" style="font-size:11px;padding:5px 10px">신고 취소</button>
+      <span style="color:var(--red);font-size:12px;font-weight:600">✕ 노쇼 처리됨</span>
+      <button class="btn btn-white btn-sm" onclick="cancelNoShow('${app.id}','${app.worker_id}','${jobId}')" style="font-size:11px;padding:5px 10px">취소</button>
     </div>`;
-  } else {
-    return '<div style="color:var(--green);font-size:13px;font-weight:600;padding:8px">✓ 출근 확인됨</div>';
   }
+  return '<div style="color:var(--green);font-size:12px;font-weight:600;padding:8px">✓ 출근 확인됨</div>';
 }
 
-async function confirmAttendance(appId, jobId) {
+async function confirmAttendance(appId,jobId){
   await sb.from('applications').update({attendance_checked:true}).eq('id',appId);
-  showToast('출근 확인했어요!');
-  loadApplicants(jobId,'');
+  showToast('출근 확인했어요!');loadApplicants(jobId,'');
 }
-
-async function reportNoShow(appId, workerName, jobId) {
-  if(!confirm(`"${workerName}"님을 노쇼 신고할까요?\n3회 누적시 7일 이용 제한됩니다.`)) return;
-  await sb.from('applications').update({no_show:true, attendance_checked:true}).eq('id',appId);
-  const {data:app} = await sb.from('applications').select('worker_id').eq('id',appId);
-  if(app&&app.length>0) {
-    const {data:profile} = await sb.from('profiles').select('warning_count').eq('id',app[0].worker_id);
-    if(profile&&profile.length>0) {
-      const newCount = (profile[0].warning_count||0) + 1;
-      const isBanned = newCount >= 3;
-      const banUntil = isBanned ? new Date(Date.now() + 7*24*60*60*1000).toISOString() : null;
-      await sb.from('profiles').update({warning_count:newCount, is_banned:isBanned, ban_until:banUntil}).eq('id',app[0].worker_id);
+async function reportNoShow(appId,workerName,jobId){
+  if(!confirm(`"${workerName}"님을 노쇼 신고할까요?\n3회 누적시 7일 이용 제한됩니다.`))return;
+  await sb.from('applications').update({no_show:true,attendance_checked:true}).eq('id',appId);
+  const {data:app}=await sb.from('applications').select('worker_id').eq('id',appId);
+  if(app&&app.length>0){
+    const {data:p}=await sb.from('profiles').select('warning_count').eq('id',app[0].worker_id);
+    if(p&&p.length>0){
+      const n=(p[0].warning_count||0)+1;
+      const banned=n>=3;
+      const until=banned?new Date(Date.now()+7*24*60*60*1000).toISOString():null;
+      await sb.from('profiles').update({warning_count:n,is_banned:banned,ban_until:until}).eq('id',app[0].worker_id);
     }
   }
-  showToast('노쇼 신고가 접수됐어요');
-  loadApplicants(jobId,'');
+  showToast('노쇼 신고가 접수됐어요');loadApplicants(jobId,'');
 }
-
-async function cancelNoShow(appId, workerId, jobId) {
-  if(!confirm('노쇼 신고를 취소할까요?\n경고 횟수가 1회 차감됩니다.')) return;
-  await sb.from('applications').update({no_show:false, attendance_checked:false}).eq('id',appId);
-  const {data:profile} = await sb.from('profiles').select('warning_count,is_banned').eq('id',workerId);
-  if(profile&&profile.length>0) {
-    const newCount = Math.max(0,(profile[0].warning_count||1)-1);
-    const isBanned = newCount >= 3;
-    await sb.from('profiles').update({warning_count:newCount, is_banned:isBanned, ban_until:isBanned?profile[0].ban_until:null}).eq('id',workerId);
+async function cancelNoShow(appId,workerId,jobId){
+  if(!confirm('노쇼 신고를 취소할까요?\n경고 1회 차감됩니다.'))return;
+  await sb.from('applications').update({no_show:false,attendance_checked:false}).eq('id',appId);
+  const {data:p}=await sb.from('profiles').select('warning_count').eq('id',workerId);
+  if(p&&p.length>0){
+    const n=Math.max(0,(p[0].warning_count||1)-1);
+    await sb.from('profiles').update({warning_count:n,is_banned:n>=3}).eq('id',workerId);
   }
-  showToast('노쇼 신고를 취소했어요');
-  loadApplicants(jobId,'');
+  showToast('노쇼 신고를 취소했어요');loadApplicants(jobId,'');
 }
-
-async function acceptApp(appId, jobId) {
+async function acceptApp(appId,jobId){
   await sb.from('applications').update({status:'accepted'}).eq('id',appId);
-  showToast('수락했어요!');
-  loadApplicants(jobId,'');
+  showToast('채용 확정했어요! 🎉');loadApplicants(jobId,'');loadDashboard();
 }
-
-async function passApp(appId, jobId) {
+async function passApp(appId,jobId){
   await sb.from('applications').update({status:'rejected'}).eq('id',appId);
-  showToast('패스했어요');
-  loadApplicants(jobId,'');
+  showToast('패스했어요');loadApplicants(jobId,'');
 }
-
-async function loadOnlineCount() {
+async function loadOnlineCount(){
   const {count}=await sb.from('profiles').select('*',{count:'exact',head:true}).eq('role','worker').eq('is_online',true);
   const el=document.getElementById('online-count');
-  if(el) el.textContent=count||0;
+  if(el)el.textContent=count||0;
 }
-
-function fillEmpProfile() {
-  if(!currentProfile||!currentUser) return;
+function fillEmpProfile(){
+  if(!currentProfile||!currentUser)return;
   document.getElementById('ep-name-display').textContent=currentProfile.nickname||currentProfile.name;
   document.getElementById('ep-email').textContent=currentUser.email;
   document.getElementById('ep-nickname').textContent=currentProfile.nickname||'미설정';
@@ -862,68 +943,59 @@ function fillEmpProfile() {
   document.getElementById('ep-date').textContent=currentProfile.created_at?.slice(0,10)||'-';
 }
 
-function workerNav(tab, el) {
+// WORKER
+function workerNav(tab,el){
   document.querySelectorAll('#worker-nav .nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
-  ['home','applies','pref','profile'].forEach(t=>{
-    const el2=document.getElementById('wk-'+t);
-    if(el2) el2.style.display=t===tab?'block':'none';
+  ['home','applies','chat','pref','profile'].forEach(t=>{
+    const e=document.getElementById('wk-'+t);
+    if(e)e.style.display=t===tab?'block':'none';
   });
-  if(tab==='applies') loadMyApplies('전체');
+  if(tab==='applies')loadMyApplies('전체');
+  if(tab==='chat')loadChatList();
 }
-
-async function toggleOnOff() {
+async function toggleOnOff(){
+  if(currentProfile?.is_banned)return;
   const el=document.getElementById('onoff');
   const isOn=el.classList.toggle('on');
   el.querySelector('.on-label').textContent=isOn?'구직중':'오프라인';
   await sb.from('profiles').update({is_online:isOn}).eq('id',currentUser.id);
-  if(isOn) {
-    showRadarThenLoad();
-  } else {
-    showToast('구직을 비활성화했어요');
-  }
+  if(isOn)showRadarThenLoad();
+  else showToast('구직을 비활성화했어요');
 }
-
-function showRadarThenLoad() {
+function showRadarThenLoad(){
   const radar=document.getElementById('radar-wrap');
   const feed=document.getElementById('job-feed');
   const filter=document.querySelector('#wk-home .fchip.active');
   const cat=filter?filter.textContent:'전체';
-  radar.classList.add('show');
-  feed.style.opacity='0';
-  feed.innerHTML='';
-  setTimeout(async ()=>{
+  radar.classList.add('show');feed.style.opacity='0';feed.innerHTML='';
+  setTimeout(async()=>{
     await loadJobs(cat);
     radar.classList.remove('show');
-    feed.style.transition='opacity .4s ease';
-    feed.style.opacity='1';
+    feed.style.transition='opacity .4s ease';feed.style.opacity='1';
     setTimeout(()=>feed.style.transition='',400);
-  }, 2000);
+  },2000);
 }
-
-async function loadJobs(cat) {
+async function loadJobs(cat){
   const el=document.getElementById('job-feed');
   const radar=document.getElementById('radar-wrap');
-  if(radar&&!radar.classList.contains('show')) {
+  if(radar&&!radar.classList.contains('show'))
     el.innerHTML='<div class="loading"><div class="spinner"></div>공고 불러오는 중...</div>';
-  }
-  let q=sb.from('jobs').select('*').eq('status','open').order('created_at',{ascending:false});
-  if(cat!=='전체') q=q.eq('category',cat);
+  let q=sb.from('jobs').select('*').eq('status','open').order('date',{ascending:true}).order('created_at',{ascending:false});
+  if(cat!=='전체')q=q.eq('category',cat);
   const {data:jobs}=await q;
-  if(!jobs||jobs.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">주변에 공고가 없어요<br>잠시 후 다시 확인해보세요</div></div>';return;}
+  if(!jobs||!jobs.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">주변에 공고가 없어요<br>잠시 후 다시 확인해보세요</div></div>';return;}
+  const today=new Date().toISOString().split('T')[0];
+  const urgent=jobs.filter(j=>j.date===today);
+  const normal=jobs.filter(j=>j.date!==today);
+  const sorted=[...urgent,...normal];
   const icons={'외식':'🍜','카페':'☕','편의점':'🏪','물류':'📦','청소':'🧹'};
-  const bgs={'외식':'#FFF9C4','카페':'#E8F5E9','편의점':'#FFF3E0','물류':'#E3F2FD','청소':'#FCE4EC'};
-  const today2 = new Date().toISOString().split('T')[0];
-  const urgent = jobs.filter(j=>j.date===today2);
-  const normal = jobs.filter(j=>j.date!==today2);
-  const sorted = [...urgent,...normal];
-  el.innerHTML=sorted.map((j,i)=>{
-  const isUrgent = j.date===today2;
-  return `
-    <div class="job-card" style="animation-delay:${i*.05}s">
-      ${isUrgent?'<div class="badge-fire">🔥 마감 임박</div>':i===0?'<div class="badge-new">NEW</div>':''}
+  const bgs={'외식':'#FFF0F0','카페':'#E8F5E9','편의점':'#FFF8E8','물류':'#E3F2FD','청소':'#FCE4EC'};
+  el.innerHTML=sorted.map((j,i)=>`
+    <div class="job-card" style="animation-delay:${i*.05}s" onclick="openDetail('${j.id}')">
+      ${j.date===today?'<div class="badge-fire">🔥 마감 임박</div>':i===0?'<div class="badge-new">NEW</div>':''}
       <div class="job-top">
-        <div class="biz-icon" style="background:${bgs[j.category]||'#FFF9C4'}">${icons[j.category]||'💼'}</div>
+        <div class="biz-icon" style="background:${bgs[j.category]||'#FFF0F0'}">${icons[j.category]||'💼'}</div>
         <div class="job-info">
           <div class="job-title">${j.description.slice(0,22)}</div>
           <div class="job-biz">${j.employer_name} · ${j.category}</div>
@@ -933,126 +1005,158 @@ async function loadJobs(cat) {
           <div class="wage-unit">원/시간</div>
         </div>
       </div>
-      ${isUrgent?'<div class="badge-fire">🔥 마감 임박</div>':i===0?'<div class="badge-new">NEW</div>':''}
       <div class="job-meta">
         <div class="meta-chip">📅 ${j.date}</div>
         <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
         <div class="meta-chip">📍 ${(Math.random()*3+.3).toFixed(1)}km</div>
         <div class="meta-chip">👤 ${j.headcount||1}명</div>
       </div>
-      <button class="btn btn-yellow btn-full" id="ab-${j.id}" onclick="applyJob('${j.id}',this)" style="font-size:15px;padding:14px">지원하기</button>
-    </div>
-  `;
-  }).join('');
+      <button class="btn btn-red btn-full" id="ab-${j.id}" onclick="event.stopPropagation();applyJob('${j.id}',this)" style="font-size:15px;padding:14px">지원하기</button>
+    </div>`).join('');
   checkApplied(sorted.map(j=>j.id));
 }
 
-async function checkApplied(jobIds) {
-  if(!jobIds.length) return;
+async function openDetail(jobId){
+  const {data:jobs}=await sb.from('jobs').select('*').eq('id',jobId);
+  if(!jobs||!jobs.length)return;
+  const j=jobs[0];
+  const icons={'외식':'🍜','카페':'☕','편의점':'🏪','물류':'📦','청소':'🧹'};
+  const h=calcHours(j.start_time,j.end_time);
+  document.getElementById('detail-title').textContent=j.description;
+  document.getElementById('detail-content').innerHTML=`
+    <div class="detail-row"><span class="detail-label">업종</span><span class="detail-value">${icons[j.category]||''} ${j.category}</span></div>
+    <div class="detail-row"><span class="detail-label">사장님</span><span class="detail-value">${j.employer_name}</span></div>
+    <div class="detail-row"><span class="detail-label">날짜</span><span class="detail-value">${j.date}</span></div>
+    <div class="detail-row"><span class="detail-label">시간</span><span class="detail-value">${j.start_time}~${j.end_time} (${h}시간)</span></div>
+    <div class="detail-row"><span class="detail-label">시급</span><span class="detail-value">${(j.wage||0).toLocaleString()}원/시간</span></div>
+    <div class="detail-row"><span class="detail-label">예상 일당</span><span class="detail-value" style="color:var(--red);font-weight:700">${(h*(j.wage||0)).toLocaleString()}원</span></div>
+    <div class="detail-row"><span class="detail-label">모집 인원</span><span class="detail-value">${j.headcount||1}명</span></div>
+    ${j.skills&&j.skills.length?`<div class="detail-row"><span class="detail-label">필요 역량</span><span class="detail-value">${j.skills.join(', ')}</span></div>`:''}`;
+  const applyBtn=document.getElementById('detail-apply-btn');
+  applyBtn.textContent='지원하기';applyBtn.className='btn btn-red btn-full';applyBtn.disabled=false;
+  applyBtn.style.background='';applyBtn.style.color='';
+  applyBtn.onclick=()=>applyJobFromDetail(jobId);
+  const {data:ex}=await sb.from('applications').select('id,status').eq('job_id',jobId).eq('worker_id',currentUser.id);
+  if(ex&&ex.length>0){
+    const st=ex[0].status;
+    applyBtn.textContent=st==='accepted'?'✓ 채용 확정됐어요':st==='cancelled'?'취소된 공고':'✓ 이미 지원함';
+    applyBtn.disabled=true;applyBtn.style.background='var(--bg)';applyBtn.style.color='var(--text3)';
+  }
+  document.getElementById('detail-modal').style.display='block';
+  document.getElementById('detail-overlay').classList.add('show');
+}
+function closeDetail(){
+  document.getElementById('detail-modal').style.display='none';
+  document.getElementById('detail-overlay').classList.remove('show');
+}
+function calcHours(s,e){
+  if(!s||!e)return 0;
+  const [sh,sm]=s.split(':').map(Number);
+  const [eh,em]=e.split(':').map(Number);
+  return Math.max(0,((eh*60+em)-(sh*60+sm))/60);
+}
+async function applyJobFromDetail(jobId){
+  const btn=document.getElementById('detail-apply-btn');
+  btn.disabled=true;btn.textContent='지원 중...';
+  const {error}=await sb.from('applications').insert({job_id:jobId,worker_id:currentUser.id,status:'pending'});
+  if(error){showToast('오류가 발생했어요');btn.disabled=false;btn.textContent='지원하기';return;}
+  btn.textContent='✓ 지원 완료!';btn.style.background='var(--bg)';btn.style.color='var(--text3)';
+  showToast('지원했어요!');loadWorkerStats();closeDetail();
+  loadJobs(document.querySelector('#wk-home .fchip.active')?.textContent||'전체');
+}
+async function checkApplied(jobIds){
+  if(!jobIds.length)return;
   const {data}=await sb.from('applications').select('job_id,status').eq('worker_id',currentUser.id).in('job_id',jobIds);
-  if(!data) return;
+  if(!data)return;
   data.forEach(app=>{
     const btn=document.getElementById('ab-'+app.job_id);
     if(btn){
-      btn.textContent=app.status==='accepted'?'수락됐어요!':app.status==='rejected'?'패스됨':'지원 완료';
+      btn.textContent=app.status==='accepted'?'채용 확정됐어요!':app.status==='cancelled'?'취소됨':'지원 완료';
       btn.style.background=app.status==='accepted'?'var(--green)':'var(--bg)';
       btn.style.color=app.status==='accepted'?'white':'var(--text3)';
       btn.disabled=true;
     }
   });
 }
-
-async function applyJob(jobId, btn) {
+async function applyJob(jobId,btn){
   btn.disabled=true;btn.textContent='지원 중...';
   const {data:ex}=await sb.from('applications').select('id').eq('job_id',jobId).eq('worker_id',currentUser.id);
   if(ex&&ex.length>0){showToast('이미 지원한 공고예요!');btn.disabled=false;btn.textContent='지원하기';return;}
   const {error}=await sb.from('applications').insert({job_id:jobId,worker_id:currentUser.id,status:'pending'});
-  if(error){showToast('오류가 발생했어요: '+error.message);btn.disabled=false;btn.textContent='지원하기';return;}
+  if(error){showToast('오류가 발생했어요');btn.disabled=false;btn.textContent='지원하기';return;}
   btn.textContent='지원 완료';btn.style.background='var(--bg)';btn.style.color='var(--text3)';btn.disabled=true;
-  showToast('지원했어요!');
-  loadWorkerStats();
+  showToast('지원했어요!');loadWorkerStats();
 }
-
-async function loadMyApplies(filter) {
+async function loadMyApplies(filter){
   const el=document.getElementById('my-applies-list');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   let q=sb.from('applications').select('*,jobs(description,date,start_time,end_time,wage,employer_name,employer_phone,category)').eq('worker_id',currentUser.id).order('created_at',{ascending:false});
-  if(filter!=='전체') q=q.eq('status',filter);
+  if(filter!=='전체')q=q.eq('status',filter);
   const {data}=await q;
-  allApplies=data||[];
-  renderApplies(allApplies);
+  renderApplies(data||[]);
 }
-
-function renderApplies(list) {
+function renderApplies(list){
   const el=document.getElementById('my-applies-list');
-  if(!list||list.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">지원한 공고가 없어요</div></div>';return;}
+  if(!list||!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">지원한 공고가 없어요</div></div>';return;}
   const icons={'외식':'🍜','카페':'☕','편의점':'🏪','물류':'📦','청소':'🧹'};
-  const bgs={'외식':'#FFF9C4','카페':'#E8F5E9','편의점':'#FFF3E0','물류':'#E3F2FD','청소':'#FCE4EC'};
+  const bgs={'외식':'#FFF0F0','카페':'#E8F5E9','편의점':'#FFF8E8','물류':'#E3F2FD','청소':'#FCE4EC'};
   el.innerHTML=list.map(app=>{
-    const j=app.jobs;
-    if(!j) return '';
-    const sLabel=app.status==='pending'?'검토중':app.status==='accepted'?'수락됨':app.status==='cancelled'?'취소됨':'패스됨';
+    const j=app.jobs;if(!j)return '';
+    const sLabel=app.status==='pending'?'검토중':app.status==='accepted'?'채용 확정':app.status==='cancelled'?'취소됨':'패스됨';
+    const h=calcHours(j.start_time,j.end_time);
     return `
-      <div class="job-card">
-        <div class="job-top">
-          <div class="biz-icon" style="background:${bgs[j.category]||'#FFF9C4'}">${icons[j.category]||'💼'}</div>
-          <div class="job-info">
-            <div class="job-title">${j.description?.slice(0,22)||''}</div>
-            <div class="job-biz">${j.employer_name}</div>
-          </div>
-          <div class="job-wage">
-            <div class="wage-num">${(j.wage||0).toLocaleString()}</div>
-            <div class="wage-unit">원/시간</div>
-          </div>
+    <div class="job-card">
+      <div class="job-top">
+        <div class="biz-icon" style="background:${bgs[j.category]||'#FFF0F0'}">${icons[j.category]||'💼'}</div>
+        <div class="job-info">
+          <div class="job-title">${j.description?.slice(0,22)||''}</div>
+          <div class="job-biz">${j.employer_name}</div>
         </div>
-        <div class="job-meta">
-          <div class="meta-chip">📅 ${j.date}</div>
-          <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
-          <span class="badge-status badge-${app.status}">${sLabel}</span>
+        <div class="job-wage">
+          <div class="wage-num">${(j.wage||0).toLocaleString()}</div>
+          <div class="wage-unit">원/시간</div>
         </div>
-        ${app.status==='accepted'?`
-          <div class="contact-box">
-            <div class="contact-label">📞 사업주 연락처 — 연락해보세요!</div>
-            <div class="contact-num">${j.employer_phone||'번호 미등록'}</div>
-          </div>
-        `:''}
-        ${app.status==='pending'?`
-          <button onclick="cancelApply('${app.id}')" style="width:100%;margin-top:8px;padding:10px;background:transparent;color:var(--red);border:1.5px solid #FFD0D0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">지원 취소</button>
-        `:''}
       </div>
-    `;
-    }).join('');
+      <div class="job-meta">
+        <div class="meta-chip">📅 ${j.date}</div>
+        <div class="meta-chip">⏰ ${j.start_time||''}~${j.end_time||''}</div>
+        <div class="meta-chip">💰 ${(h*(j.wage||0)).toLocaleString()}원</div>
+        <span class="badge-status badge-${app.status}">${sLabel}</span>
+      </div>
+      ${app.status==='accepted'?`
+        <div class="contact-box">
+          <div class="contact-label">📞 사장님 연락처</div>
+          <div class="contact-num">${j.employer_phone||'번호 미등록'}</div>
+        </div>
+        <button class="btn btn-navy btn-full btn-sm" onclick="openChatAsWorker('${app.id}','${j.employer_name}')" style="margin-top:10px">💬 사장님께 채팅하기</button>
+      `:''}
+      ${app.status==='pending'?`<button onclick="cancelApply('${app.id}')" style="width:100%;margin-top:8px;padding:10px;background:transparent;color:var(--red);border:1.5px solid #FFD0D0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">지원 취소</button>`:''}
+    </div>`;
+  }).join('');
 }
-async function cancelApply(appId) {
-  if(!confirm('지원을 취소할까요?')) return;
-  await sb.from('applications').update({status:'cancelled', cancelled_at:new Date().toISOString()}).eq('id',appId);
-  showToast('지원을 취소했어요');
-  loadMyApplies('전체');
-  loadWorkerStats();
+async function cancelApply(appId){
+  if(!confirm('지원을 취소할까요?'))return;
+  await sb.from('applications').update({status:'cancelled',cancelled_at:new Date().toISOString()}).eq('id',appId);
+  showToast('지원을 취소했어요');loadMyApplies('전체');loadWorkerStats();
 }
-
-function filterApplies(filter, el) {
+function filterApplies(filter,el){
   document.querySelectorAll('#wk-applies .fchip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  loadMyApplies(filter);
+  el.classList.add('active');loadMyApplies(filter);
 }
-
-function filterJobs(cat, el) {
+function filterJobs(cat,el){
   document.querySelectorAll('#wk-home .fchip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  loadJobs(cat);
+  el.classList.add('active');loadJobs(cat);
 }
-
-async function loadWorkerStats() {
-  const {data}=await sb.from('applications').select('*').eq('worker_id',currentUser.id).eq('status','accepted');
+async function loadWorkerStats(){
+  const {data}=await sb.from('applications').select('*,jobs(wage,start_time,end_time)').eq('worker_id',currentUser.id).eq('status','accepted');
   const count=data?.length||0;
+  let earn=0;data?.forEach(a=>{earn+=calcHours(a.jobs?.start_time,a.jobs?.end_time)*(a.jobs?.wage||0);});
   document.getElementById('st-count').textContent=count;
   document.getElementById('st-rating').textContent='4.9';
-  document.getElementById('st-earn').textContent=count>0?(count*33000).toLocaleString():'0';
+  document.getElementById('st-earn').textContent=earn>0?Math.round(earn/1000)+'K':'0';
 }
-
-function fillWkProfile() {
-  if(!currentProfile||!currentUser) return;
+function fillWkProfile(){
+  if(!currentProfile||!currentUser)return;
   document.getElementById('wp-name-display').textContent=currentProfile.nickname||currentProfile.name;
   document.getElementById('wp-email').textContent=currentUser.email;
   document.getElementById('wp-nickname').textContent=currentProfile.nickname||'미설정';
@@ -1060,141 +1164,148 @@ function fillWkProfile() {
   document.getElementById('wp-phone').textContent=currentProfile.phone||'미등록';
   document.getElementById('wp-phone-edit').value=currentProfile.phone||'';
   document.getElementById('wp-date').textContent=currentProfile.created_at?.slice(0,10)||'-';
-  const bio = currentProfile.bio||'';
+  const bio=currentProfile.bio||'';
   document.getElementById('wp-bio').value=bio;
   document.getElementById('bio-count').textContent=bio.length;
+  const w=currentProfile.warning_count||0;
+  if(w>0){document.getElementById('wp-warning').style.display='inline-flex';document.getElementById('wp-warning-count').textContent=w;}
 }
-
-function togglePrefTag(el){ el.classList.toggle('selected'); }
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  const bioEl = document.getElementById('wp-bio');
-  if(bioEl) bioEl.addEventListener('input', ()=>{
-    document.getElementById('bio-count').textContent = bioEl.value.length;
-  });
-});
-
-function loadPrefSettings() {
-  if(!currentProfile) return;
-  const cats = currentProfile.preferred_categories||[];
-  document.querySelectorAll('#pref-cats .tag').forEach(t=>{
-    if(cats.includes(t.dataset.v)) t.classList.add('selected');
-  });
-  if(currentProfile.preferred_start_time) document.getElementById('pref-start').value=currentProfile.preferred_start_time;
-  if(currentProfile.preferred_end_time) document.getElementById('pref-end').value=currentProfile.preferred_end_time;
-  if(currentProfile.preferred_max_distance) document.getElementById('pref-dist').value=currentProfile.preferred_max_distance;
+function loadPrefSettings(){
+  if(!currentProfile)return;
+  const cats=currentProfile.preferred_categories||[];
+  document.querySelectorAll('#pref-cats .tag').forEach(t=>{if(cats.includes(t.dataset.v))t.classList.add('selected');});
+  if(currentProfile.preferred_start_time)document.getElementById('pref-start').value=currentProfile.preferred_start_time;
+  if(currentProfile.preferred_end_time)document.getElementById('pref-end').value=currentProfile.preferred_end_time;
+  if(currentProfile.preferred_max_distance)document.getElementById('pref-dist').value=currentProfile.preferred_max_distance;
 }
-
-async function savePref() {
+async function savePref(){
   const cats=[...document.querySelectorAll('#pref-cats .tag.selected')].map(t=>t.dataset.v);
   const start=document.getElementById('pref-start').value;
   const end=document.getElementById('pref-end').value;
   const dist=parseInt(document.getElementById('pref-dist').value);
-  const {error}=await sb.from('profiles').update({
-    preferred_categories:cats,
-    preferred_start_time:start,
-    preferred_end_time:end,
-    preferred_max_distance:dist
-  }).eq('id',currentUser.id);
-  if(error){showToast('저장에 실패했어요');return;}
+  await sb.from('profiles').update({preferred_categories:cats,preferred_start_time:start,preferred_end_time:end,preferred_max_distance:dist}).eq('id',currentUser.id);
   currentProfile.preferred_categories=cats;
-  currentProfile.preferred_start_time=start;
-  currentProfile.preferred_end_time=end;
   showToast('조건을 저장했어요!');
 }
-
-async function updateProfile(role) {
+async function updateProfile(role){
   const phone=document.getElementById(role==='employer'?'ep-phone-edit':'wp-phone-edit').value.trim();
   const nickname=document.getElementById(role==='employer'?'ep-nickname-edit':'wp-nickname-edit').value.trim();
   const updates={};
-  if(phone) updates.phone=phone;
-  if(nickname) updates.nickname=nickname;
-  if(role==='worker') {
-    const bio=document.getElementById('wp-bio').value.trim();
-    updates.bio=bio;
-    currentProfile.bio=bio;
-  }
+  if(phone)updates.phone=phone;
+  if(nickname)updates.nickname=nickname;
+  if(role==='worker'){const bio=document.getElementById('wp-bio').value.trim();updates.bio=bio;currentProfile.bio=bio;}
   if(!Object.keys(updates).length){showToast('변경 내용을 입력해주세요');return;}
   const {error}=await sb.from('profiles').update(updates).eq('id',currentUser.id);
   if(error){showToast('저장에 실패했어요');return;}
-  if(phone) currentProfile.phone=phone;
-  if(nickname) currentProfile.nickname=nickname;
-  if(role==='employer'){
-    if(phone) document.getElementById('ep-phone').textContent=phone;
-    if(nickname){document.getElementById('ep-nickname').textContent=nickname;document.getElementById('emp-name').textContent=nickname;}
-  } else {
-    if(phone) document.getElementById('wp-phone').textContent=phone;
-    if(nickname){document.getElementById('wp-nickname').textContent=nickname;document.getElementById('wk-name').textContent=nickname;}
+  if(phone)currentProfile.phone=phone;
+  if(nickname){
+    currentProfile.nickname=nickname;
+    if(role==='employer'){document.getElementById('ep-nickname').textContent=nickname;document.getElementById('emp-name').textContent=nickname;}
+    else{document.getElementById('wp-nickname').textContent=nickname;document.getElementById('wk-name').textContent=nickname;}
   }
   showToast('저장했어요!');
 }
 
-let toastT;
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(toastT);
-  toastT=setTimeout(()=>t.classList.remove('show'),2200);
+// CHAT
+async function openChatAsWorker(appId,partnerName){
+  currentChatAppId=appId;
+  document.getElementById('chat-partner-name').textContent=partnerName;
+  document.getElementById('chat-job-info').textContent='사장님과 채팅';
+  openChatScreen(appId);
+}
+async function openChatAsEmployer(appId,workerName){
+  currentChatAppId=appId;
+  document.getElementById('chat-partner-name').textContent=workerName;
+  document.getElementById('chat-job-info').textContent='알바생과 채팅';
+  openChatScreen(appId);
+}
+async function openChatScreen(appId){
+  const screen=document.getElementById('chat-screen');
+  screen.classList.add('show');
+  await loadMessages(appId);
+  // 실시간 구독
+  if(chatSubscription)chatSubscription.unsubscribe();
+  chatSubscription=sb.channel('messages:'+appId)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`application_id=eq.${appId}`},
+      payload=>{appendMessage(payload.new);})
+    .subscribe();
+  // 읽음 처리
+  await sb.from('messages').update({is_read:true}).eq('application_id',appId).neq('sender_id',currentUser.id);
+  loadUnreadCount();
+}
+function closeChat(){
+  document.getElementById('chat-screen').classList.remove('show');
+  if(chatSubscription){chatSubscription.unsubscribe();chatSubscription=null;}
+  currentChatAppId=null;
+}
+async function loadMessages(appId){
+  const el=document.getElementById('chat-messages');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const {data}=await sb.from('messages').select('*,profiles(name,nickname)').eq('application_id',appId).order('created_at',{ascending:true});
+  el.innerHTML='';
+  (data||[]).forEach(m=>appendMessage(m));
+  el.scrollTop=el.scrollHeight;
+}
+function appendMessage(msg){
+  const el=document.getElementById('chat-messages');
+  const isMine=msg.sender_id===currentUser.id;
+  const time=new Date(msg.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  const div=document.createElement('div');
+  div.className='msg-wrap'+(isMine?' mine':'');
+  div.innerHTML=`<div class="msg-bubble ${isMine?'mine':'theirs'}">${msg.content}</div><div class="msg-time">${time}</div>`;
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+}
+async function sendMessage(){
+  const inp=document.getElementById('chat-input');
+  const content=inp.value.trim();
+  if(!content||!currentChatAppId)return;
+  inp.value='';
+  await sb.from('messages').insert({application_id:currentChatAppId,sender_id:currentUser.id,content});
+}
+async function loadChatList(){
+  const el=document.getElementById('chat-list');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const {data:apps}=await sb.from('applications')
+    .select('*,jobs(description,employer_name),profiles(name,nickname)')
+    .eq('worker_id',currentUser.id).eq('status','accepted');
+  if(!apps||!apps.length){el.innerHTML='<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">채팅 내역이 없어요<br>채용 확정 후 채팅을 시작하세요</div></div>';return;}
+  el.innerHTML=apps.map(app=>`
+    <div class="card" style="cursor:pointer" onclick="openChatAsWorker('${app.id}','${app.jobs?.employer_name||'사장님'}')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;background:var(--red-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px">🏪</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">${app.jobs?.employer_name||'사장님'}</div>
+          <div style="font-size:12px;color:var(--text3)">${app.jobs?.description?.slice(0,20)||''}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text3)">›</div>
+      </div>
+    </div>`).join('');
+}
+async function loadUnreadCount(){
+  const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).neq('sender_id',currentUser.id).eq('is_read',false);
+  const badge=document.getElementById('chat-badge');
+  if(badge){
+    if(count>0){badge.style.display='block';badge.textContent=count;}
+    else badge.style.display='none';
+  }
 }
 
-// PWA Service Worker 등록
-if('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/barogagi/sw.js').catch(()=>{});
-  });
+// TOAST
+let toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
 setInterval(()=>{
-  if(document.getElementById('employer-screen').classList.contains('active')) loadOnlineCount();
+  if(document.getElementById('employer-screen').classList.contains('active'))loadOnlineCount();
+  if(currentProfile?.role==='worker')loadUnreadCount();
 },15000);
 
-// 설치 안내 팝업
-function showInstallGuide() {
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isAndroid = /android/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
-  if (isStandalone) return; // 이미 설치됨
-
-  const steps = document.getElementById('install-steps');
-  if (isIOS) {
-    steps.innerHTML = `
-      <div class="install-step"><div class="step-num">1</div><div class="step-text">하단 공유 버튼(□↑) 탭하기</div></div>
-      <div class="install-step"><div class="step-num">2</div><div class="step-text">"홈 화면에 추가" 선택하기</div></div>
-      <div class="install-step"><div class="step-num">3</div><div class="step-text">"추가" 버튼 탭하기</div></div>
-    `;
-  } else if (isAndroid) {
-    steps.innerHTML = `
-      <div class="install-step"><div class="step-num">1</div><div class="step-text">우측 상단 메뉴(⋮) 탭하기</div></div>
-      <div class="install-step"><div class="step-num">2</div><div class="step-text">"앱 설치" 또는 "홈화면에 추가" 선택</div></div>
-      <div class="install-step"><div class="step-num">3</div><div class="step-text">"설치" 버튼 탭하기</div></div>
-    `;
-  } else {
-    steps.innerHTML = `
-      <div class="install-step"><div class="step-num">1</div><div class="step-text">주소창 우측 설치 아이콘 클릭</div></div>
-      <div class="install-step"><div class="step-num">2</div><div class="step-text">"설치" 버튼 클릭하기</div></div>
-    `;
-  }
-
-  document.getElementById('install-popup').classList.add('show');
-  document.getElementById('install-overlay').classList.add('show');
-}
-
-function closeInstall() {
-  document.getElementById('install-popup').classList.remove('show');
-  document.getElementById('install-overlay').classList.remove('show');
-  sessionStorage.setItem('installShown', 'true');
-}
-
-// QR로 들어왔을 때 자동으로 팝업
-window.addEventListener('load', () => {
-  const fromQR = document.referrer.includes('dashing-marigold-eacfdb') || 
-                 document.referrer === '' && !sessionStorage.getItem('installShown');
-  if (!sessionStorage.getItem('installShown')) {
-    setTimeout(showInstallGuide, 1500);
-  }
-});
-
+if('serviceWorker' in navigator)
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/barogagi/sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
