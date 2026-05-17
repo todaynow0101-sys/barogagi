@@ -1454,9 +1454,6 @@ async function openChatAsEmployer(appId,workerName){
   document.getElementById('chat-job-info').textContent='알바생과 채팅';
   openChatScreen(appId);
 }
-let chatPollInterval = null;
-let lastMessageTime = null;
-
 async function openChatScreen(appId){
   const screen=document.getElementById('chat-screen');
   screen.classList.add('show');
