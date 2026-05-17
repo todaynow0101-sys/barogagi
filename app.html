@@ -681,7 +681,7 @@ const sb = createClient(
 );
 
 let currentUser = null, currentProfile = null;
-let currentChatAppId = null, chatSubscription = null;
+let currentChatAppId = null, chatSubscription = null, chatPollInterval = null, lastMessageTime = null;
 
 function maskName(name) {
   if(!name||name.length<2) return name||'';
@@ -1454,30 +1454,42 @@ async function openChatAsEmployer(appId,workerName){
   document.getElementById('chat-job-info').textContent='알바생과 채팅';
   openChatScreen(appId);
 }
+let chatPollInterval = null;
+let lastMessageTime = null;
+
 async function openChatScreen(appId){
   const screen=document.getElementById('chat-screen');
   screen.classList.add('show');
   await loadMessages(appId);
-  // 실시간 구독
-  if(chatSubscription){chatSubscription.unsubscribe();chatSubscription=null;}
-  chatSubscription=sb.channel('chat-'+appId)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},
-      payload=>{
-        if(payload.new.application_id===appId && payload.new.sender_id!==currentUser.id){
-          appendMessage(payload.new);
-        }
-      })
-    .subscribe((status)=>{
-      console.log('채팅 구독 상태:', status);
-    });
   // 읽음 처리
   await sb.from('messages').update({is_read:true}).eq('application_id',appId).neq('sender_id',currentUser.id);
   loadUnreadCount();
+  // polling으로 새 메시지 확인 (3초마다)
+  if(chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(async()=>{
+    if(!currentChatAppId) return;
+    const q = sb.from('messages').select('*').eq('application_id',appId).neq('sender_id',currentUser.id);
+    if(lastMessageTime) q.gt('created_at', lastMessageTime);
+    const {data} = await q.order('created_at',{ascending:true});
+    if(data&&data.length>0){
+      data.forEach(m=>{
+        // 이미 있는 메시지인지 확인
+        const exists = document.querySelector(`[data-msg-id="${m.id}"]`);
+        if(!exists) appendMessage(m);
+      });
+      lastMessageTime = data[data.length-1].created_at;
+      // 읽음 처리
+      await sb.from('messages').update({is_read:true}).eq('application_id',appId).neq('sender_id',currentUser.id);
+      loadUnreadCount();
+    }
+  }, 3000);
 }
 function closeChat(){
   document.getElementById('chat-screen').classList.remove('show');
   if(chatSubscription){chatSubscription.unsubscribe();chatSubscription=null;}
+  if(chatPollInterval){clearInterval(chatPollInterval);chatPollInterval=null;}
   currentChatAppId=null;
+  lastMessageTime=null;
 }
 async function loadMessages(appId){
   const el=document.getElementById('chat-messages');
@@ -1485,6 +1497,7 @@ async function loadMessages(appId){
   const {data,error}=await sb.from('messages').select('*').eq('application_id',appId).order('created_at',{ascending:true});
   if(error){console.error('메시지 로드 오류:',error);el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3)">메시지를 불러올 수 없어요</div>';return;}
   el.innerHTML='';
+  lastMessageTime=null;
   (data||[]).forEach(m=>appendMessage(m));
   el.scrollTop=el.scrollHeight;
 }
@@ -1495,9 +1508,12 @@ function appendMessage(msg){
   const time=msg.created_at?new Date(msg.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
   const div=document.createElement('div');
   div.className='msg-wrap'+(isMine?' mine':'');
+  div.setAttribute('data-msg-id', msg.id||'');
   div.innerHTML=`<div class="msg-bubble ${isMine?'mine':'theirs'}">${msg.content||''}</div><div class="msg-time">${time}</div>`;
   el.appendChild(div);
   el.scrollTop=el.scrollHeight;
+  // 마지막 메시지 시간 업데이트
+  if(msg.created_at) lastMessageTime=msg.created_at;
 }
 async function sendMessage(){
   const inp=document.getElementById('chat-input');
