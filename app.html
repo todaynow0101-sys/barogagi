@@ -317,6 +317,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="logo">바로<span>가기</span></div>
     <div class="header-right">
       <span class="user-chip" id="emp-name"></span>
+      <span style="position:relative;cursor:pointer;font-size:22px" onclick="showNotifications()">🔔<span id="emp-notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:white;font-size:9px;font-weight:700;padding:2px 4px;border-radius:8px;min-width:14px;text-align:center">0</span></span>
       <button class="logout-btn" onclick="logout()">로그아웃</button>
     </div>
   </div>
@@ -472,6 +473,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="logo">바로<span>가기</span></div>
     <div class="header-right">
       <span class="user-chip" id="wk-name"></span>
+      <span style="position:relative;cursor:pointer;font-size:22px" onclick="showNotifications()">🔔<span id="wk-notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:white;font-size:9px;font-weight:700;padding:2px 4px;border-radius:8px;min-width:14px;text-align:center">0</span></span>
       <button class="logout-btn" onclick="logout()">로그아웃</button>
     </div>
   </div>
@@ -660,6 +662,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   </div>
 </div>
 
+<!-- 알림 패널 -->
+<div id="notif-panel" style="display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:100vh;background:white;z-index:400;flex-direction:column;">
+  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);">
+    <span onclick="closeNotifications()" style="font-size:24px;cursor:pointer">←</span>
+    <span style="font-size:18px;font-weight:700">알림</span>
+  </div>
+  <div id="notif-list" style="flex:1;overflow-y:auto;padding:16px;"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -750,11 +761,11 @@ async function loadProfile() {
     document.getElementById('emp-name').textContent=data.nickname||data.name;
     document.getElementById('dash-name').textContent=(data.nickname||data.name)+'님! 👋';
     showScreen('employer-screen');
-    loadDashboard(); loadOnlineCount(); fillEmpProfile();
+    loadDashboard(); loadOnlineCount(); fillEmpProfile(); loadNotifCount();
   } else {
     document.getElementById('wk-name').textContent=data.nickname||data.name;
     showScreen('worker-screen');
-    checkBanStatus(); loadJobs('전체'); loadWorkerStats(); fillWkProfile(); loadPrefSettings(); loadUnreadCount();
+    checkBanStatus(); loadJobs('전체'); loadWorkerStats(); fillWkProfile(); loadPrefSettings(); loadUnreadCount(); loadNotifCount();
     setTimeout(checkNewAccepted, 1500);
   }
 }
@@ -915,7 +926,15 @@ async function loadApplicants(jobId,title) {
   document.getElementById('app-section-title').textContent=`"${title}" 지원자`;
   const el=document.getElementById('applicant-list');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const {data}=await sb.from('applications').select('id,status,attendance_checked,no_show,worker_id,job_id,profiles(name,phone,warning_count,nickname)').eq('job_id',jobId).neq('status','cancelled');
+  // 1단계: 지원자 목록 가져오기
+  const {data:apps, error:appErr}=await sb.from('applications').select('*').eq('job_id',jobId).neq('status','cancelled');
+  if(appErr){console.error('지원자 오류:',appErr);el.innerHTML='<div class="empty"><div class="empty-text">오류: '+appErr.message+'</div></div>';return;}
+  if(!apps||!apps.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">아직 지원자가 없어요</div></div>';return;}
+  // 2단계: 각 워커 프로필 가져오기
+  const workerIds=[...new Set(apps.map(a=>a.worker_id))];
+  const {data:profiles}=await sb.from('profiles').select('id,name,nickname,phone,warning_count').in('id',workerIds);
+  const profileMap={};(profiles||[]).forEach(p=>profileMap[p.id]=p);
+  const data=apps.map(a=>({...a,profiles:profileMap[a.worker_id]||null}));
   if(!data||!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">아직 지원자가 없어요</div></div>';return;}
   const avgs=['👩','👨','👩','👨','👩'];
   const colors=['#FFE8E8','#E8F5E9','#E3F2FD','#FDE8FF','#FFF8E8'];
@@ -997,6 +1016,19 @@ async function cancelNoShow(appId,workerId,jobId){
 async function acceptApp(appId,jobId){
   await sb.from('applications').update({status:'accepted'}).eq('id',appId);
   showCongrats();
+  // 알바생한테 알림
+  try {
+    const {data:app}=await sb.from('applications').select('worker_id,jobs(description)').eq('id',appId);
+    if(app&&app.length>0){
+      await sb.from('notifications').insert({
+        user_id:app[0].worker_id,
+        type:'accepted',
+        message:`🎉 "${(app[0].jobs?.description||'').slice(0,15)}" 채용이 확정됐어요!`,
+        is_read:false,
+        ref_id:jobId
+      });
+    }
+  } catch(e){console.log('알림 저장 실패(무시):', e);}
   loadApplicants(jobId,'');loadDashboard();
 }
 
@@ -1118,23 +1150,25 @@ async function loadJobs(cat){
     const defaultBg=bgs[j.category]||'#FFF0F0';
     const defaultIcon=icons[j.category]||'💼';
     return `
-    <div onclick="openDetail('${j.id}')" style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;animation:fadeUp .25s ease both;animation-delay:${i*.05}s">
-      <!-- 썸네일 -->
-      <div style="width:88px;height:88px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${defaultBg};display:flex;align-items:center;justify-content:center;font-size:32px">
-        ${thumb?`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover">`:`${defaultIcon}`}
-      </div>
-      <!-- 정보 -->
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          ${isUrgent?'<span style="background:var(--red);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">🔥 마감임박</span>':i===0?'<span style="background:var(--yellow);color:var(--navy);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">NEW</span>':''}
+    <div onclick="openDetail('${j.id}')" style="background:white;border-radius:20px;padding:0;margin-bottom:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);overflow:hidden;cursor:pointer;position:relative;animation:fadeUp .25s ease both;animation-delay:${i*.05}s">
+      <div style="display:flex;align-items:stretch;gap:0">
+        <!-- 썸네일 -->
+        <div style="width:110px;height:110px;flex-shrink:0;background:${defaultBg};display:flex;align-items:center;justify-content:center;font-size:38px">
+          ${thumb?`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover">`:`${defaultIcon}`}
         </div>
-        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.description.slice(0,18)}</div>
-        <div style="font-size:13px;color:var(--text2);margin-bottom:6px">시급 <strong style="color:var(--navy)">${(j.wage||0).toLocaleString()}원</strong></div>
-        <div style="font-size:12px;color:var(--text3)">${j.start_time||''}~${j.end_time||''}</div>
-        <div style="font-size:12px;color:var(--text3)">${j.employer_name}</div>
+        <!-- 정보 -->
+        <div style="flex:1;min-width:0;padding:14px 14px 14px 16px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            ${isUrgent?'<span style="background:var(--red);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px">🔥 마감임박</span>':i===0?'<span style="background:var(--yellow);color:var(--navy);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px">NEW</span>':''}
+          </div>
+          <div style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.description.slice(0,18)}</div>
+          <div style="font-size:14px;color:var(--text2);margin-bottom:5px">시급 <strong style="color:var(--navy);font-size:15px">${(j.wage||0).toLocaleString()}원</strong></div>
+          <div style="font-size:13px;color:var(--text3);margin-bottom:2px">${j.start_time||''}~${j.end_time||''}</div>
+          <div style="font-size:13px;color:var(--text3)">${j.employer_name}</div>
+        </div>
+        <!-- 거리 -->
+        <div style="padding:14px 14px 0 0;font-size:13px;font-weight:700;color:var(--red);flex-shrink:0;align-self:flex-start">${dist}km</div>
       </div>
-      <!-- 거리 -->
-      <div style="font-size:12px;font-weight:700;color:var(--red);flex-shrink:0;align-self:flex-end">${dist}km</div>
     </div>`;
   }).join('');
   checkApplied(sorted.map(j=>j.id));
@@ -1212,10 +1246,24 @@ function calcHours(s,e){
 async function applyJobFromDetail(jobId){
   const btn=document.getElementById('detail-apply-btn');
   btn.disabled=true;btn.textContent='지원 중...';
-  const {error}=await sb.from('applications').insert({job_id:jobId,worker_id:currentUser.id,status:'pending'});
+  const {data:ins,error}=await sb.from('applications').insert({job_id:jobId,worker_id:currentUser.id,status:'pending'}).select();
   if(error){showToast('오류가 발생했어요');btn.disabled=false;btn.textContent='지원하기';return;}
   btn.textContent='✓ 지원 완료!';btn.style.background='var(--bg)';btn.style.color='var(--text3)';
-  showToast('지원했어요!');loadWorkerStats();closeDetail();
+  showToast('지원했어요!');
+  // 알림 저장 (사장님용)
+  try {
+    const {data:job}=await sb.from('jobs').select('employer_id,description').eq('id',jobId);
+    if(job&&job.length>0){
+      await sb.from('notifications').insert({
+        user_id:job[0].employer_id,
+        type:'new_application',
+        message:`${currentProfile.nickname||currentProfile.name}님이 "${job[0].description.slice(0,15)}" 공고에 지원했어요!`,
+        is_read:false,
+        ref_id:jobId
+      });
+    }
+  } catch(e){console.log('알림 저장 실패(무시):', e);}
+  loadWorkerStats();closeDetail();
   loadJobs(document.querySelector('#wk-home .fchip.active')?.textContent||'전체');
 }
 async function checkApplied(jobIds){
@@ -1499,6 +1547,41 @@ async function loadUnreadCount(){
 }
 
 // TOAST
+async function loadNotifCount(){
+  try {
+    const {count}=await sb.from('notifications').select('*',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('is_read',false);
+    const badge = document.getElementById(currentProfile?.role==='employer'?'emp-notif-badge':'wk-notif-badge');
+    if(badge){
+      if(count>0){badge.style.display='block';badge.textContent=count;}
+      else badge.style.display='none';
+    }
+  } catch(e){}
+}
+
+async function showNotifications(){
+  const panel=document.getElementById('notif-panel');
+  panel.style.display='flex';
+  panel.style.flexDirection='column';
+  const el=document.getElementById('notif-list');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const {data}=await sb.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(20);
+    if(!data||!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔔</div><div class="empty-text">알림이 없어요</div></div>';return;}
+    el.innerHTML=data.map(n=>`
+      <div style="padding:14px;border-bottom:1px solid var(--border);background:${n.is_read?'white':'var(--red-bg)'};border-radius:10px;margin-bottom:8px">
+        <div style="font-size:14px;font-weight:${n.is_read?'400':'700'}">${n.message}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">${new Date(n.created_at).toLocaleString('ko-KR')}</div>
+      </div>`).join('');
+    // 읽음 처리
+    await sb.from('notifications').update({is_read:true}).eq('user_id',currentUser.id).eq('is_read',false);
+    loadNotifCount();
+  } catch(e){el.innerHTML='<div class="empty"><div class="empty-text">알림을 불러올 수 없어요</div></div>';}
+}
+
+function closeNotifications(){
+  document.getElementById('notif-panel').style.display='none';
+}
+
 let toastT;
 function showToast(msg){
   const t=document.getElementById('toast');
@@ -1509,6 +1592,7 @@ function showToast(msg){
 setInterval(()=>{
   if(document.getElementById('employer-screen').classList.contains('active'))loadOnlineCount();
   if(currentProfile?.role==='worker')loadUnreadCount();
+  if(currentUser)loadNotifCount();
 },15000);
 
 if('serviceWorker' in navigator)
